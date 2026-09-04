@@ -61,28 +61,69 @@ function mix(notes, totalSec) {
   return out;
 }
 
-/* ---------- 三个音效 ---------- */
-const sounds = {
-  // 正确:短促高音
-  'hit.wav': mix([{ freq: 880, t0: 0, dur: 0.07, wave: triangle, gain: 0.45 }], 0.1),
-  // 错误:低沉锯齿波
-  'wrong.wav': mix([{ freq: 170, t0: 0, dur: 0.16, wave: sawtooth, gain: 0.4 }], 0.2),
-  // 完成:C5-E5-G5 上行琶音
-  'finish.wav': mix(
-    [
-      { freq: 523.25, t0: 0, dur: 0.12, wave: triangle, gain: 0.42 },
-      { freq: 659.25, t0: 0.12, dur: 0.12, wave: triangle, gain: 0.42 },
-      { freq: 783.99, t0: 0.24, dur: 0.25, wave: triangle, gain: 0.45 },
-    ],
-    0.55
-  ),
+/* ---------- 音效定义(按游戏分组) ---------- */
+const GROUPS = {
+  // 舒尔特方块
+  schulte: {
+    // 正确:短促高音
+    'hit.wav': mix([{ freq: 880, t0: 0, dur: 0.07, wave: triangle, gain: 0.45 }], 0.1),
+    // 错误:低沉锯齿波
+    'wrong.wav': mix([{ freq: 170, t0: 0, dur: 0.16, wave: sawtooth, gain: 0.4 }], 0.2),
+    // 完成:C5-E5-G5 上行琶音
+    'finish.wav': mix(
+      [
+        { freq: 523.25, t0: 0, dur: 0.12, wave: triangle, gain: 0.42 },
+        { freq: 659.25, t0: 0.12, dur: 0.12, wave: triangle, gain: 0.42 },
+        { freq: 783.99, t0: 0.24, dur: 0.25, wave: triangle, gain: 0.45 },
+      ],
+      0.55
+    ),
+  },
+  // 俄罗斯方块
+  tetris: {
+    // 移动:极短哒声
+    'move.wav': mix([{ freq: 320, t0: 0, dur: 0.04, wave: triangle, gain: 0.3 }], 0.06),
+    // 旋转:稍高嗒声
+    'rotate.wav': mix([{ freq: 520, t0: 0, dur: 0.05, wave: triangle, gain: 0.32 }], 0.08),
+    // 落定:低闷响
+    'lock.wav': mix([{ freq: 150, t0: 0, dur: 0.08, wave: sawtooth, gain: 0.3 }], 0.12),
+    // 消行:上行双音
+    'clear.wav': mix(
+      [
+        { freq: 660, t0: 0, dur: 0.09, wave: triangle, gain: 0.42 },
+        { freq: 880, t0: 0.09, dur: 0.14, wave: triangle, gain: 0.45 },
+      ],
+      0.28
+    ),
+    // 升级:C5-E5-G5 琶音
+    'levelup.wav': mix(
+      [
+        { freq: 523.25, t0: 0, dur: 0.1, wave: triangle, gain: 0.4 },
+        { freq: 659.25, t0: 0.1, dur: 0.1, wave: triangle, gain: 0.4 },
+        { freq: 783.99, t0: 0.2, dur: 0.22, wave: triangle, gain: 0.45 },
+      ],
+      0.5
+    ),
+    // 游戏结束:下行三音
+    'gameover.wav': mix(
+      [
+        { freq: 523.25, t0: 0, dur: 0.18, wave: triangle, gain: 0.4 },
+        { freq: 392, t0: 0.18, dur: 0.18, wave: triangle, gain: 0.4 },
+        { freq: 261.63, t0: 0.36, dur: 0.35, wave: triangle, gain: 0.45 },
+      ],
+      0.8
+    ),
+  },
 };
 
 /* ---------- 输出 ---------- */
-const outDir = path.join(__dirname, '..', 'miniprogram', 'assets', 'sounds');
-fs.mkdirSync(outDir, { recursive: true });
-for (const [name, samples] of Object.entries(sounds)) {
-  const file = path.join(outDir, name);
-  fs.writeFileSync(file, encodeWAV(samples));
-  console.log(`✓ ${file} (${fs.statSync(file).size} bytes)`);
+const baseDir = path.join(__dirname, '..', 'miniprogram', 'assets', 'sounds');
+for (const [group, sounds] of Object.entries(GROUPS)) {
+  const outDir = path.join(baseDir, group);
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const [name, samples] of Object.entries(sounds)) {
+    const file = path.join(outDir, name);
+    fs.writeFileSync(file, encodeWAV(samples));
+    console.log(`✓ ${file} (${fs.statSync(file).size} bytes)`);
+  }
 }

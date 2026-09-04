@@ -1,9 +1,10 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/home/home",
+    "pages/schulte/schulte"
   ],
   "window": {
-    "navigationBarTitleText": "舒尔特方块",
+    "navigationBarTitleText": "游戏合集",
     "navigationBarBackgroundColor": "@navBg",
     "navigationBarTextStyle": "@navTxt",
     "backgroundColor": "@pageBg",

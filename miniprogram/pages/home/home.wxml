@@ -1,0 +1,39 @@
+<view class="page {{darkClass}}">
+
+  <!-- 顶部操作栏 -->
+  <view class="topbar">
+    <view class="icon-btn" bindtap="onThemeTap" aria-label="切换主题">{{themeIcon}}</view>
+  </view>
+
+  <!-- 头部 -->
+  <view class="hero">
+    <view class="hero-title">🎮 游戏合集</view>
+    <view class="hero-sub">纯前端小游戏 · 随时来一局</view>
+  </view>
+
+  <!-- 游戏列表 -->
+  <view class="game-list">
+    <view
+      wx:for="{{games}}"
+      wx:key="id"
+      class="game-card {{item.comingSoon ? 'soon' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onGameTap"
+    >
+      <view class="game-icon">{{item.icon}}</view>
+      <view class="game-body">
+        <view class="game-name">
+          {{item.name}}
+          <text class="soon-badge" wx:if="{{item.comingSoon}}">即将上线</text>
+        </view>
+        <view class="game-desc">{{item.desc}}</view>
+        <view class="game-best" wx:if="{{item.bestLabel}}">
+          {{item.bestLabel}} <text class="best-value">{{item.bestText}}</text>
+        </view>
+      </view>
+      <view class="game-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="foot-tip">成绩仅保存在本机 · 想到的新游戏都会加进来 ✨</view>
+</view>

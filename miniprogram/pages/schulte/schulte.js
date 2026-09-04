@@ -8,7 +8,8 @@
 const MODES = [2, 3, 4, 5, 6, 7, 8]; // 方阵边长
 const KEY_RECORDS = 'schulte.records';
 const KEY_BEST = 'schulte.best';
-const KEY_SETTINGS = 'schulte.settings';
+const KEY_SETTINGS = 'schulte.settings'; // 本游戏设置(sound/hint)
+const KEY_APP_SETTINGS = 'arcade.settings'; // 应用级设置(theme,合集共用)
 const MAX_RECORDS = 100;
 const BOARD = 686; // 棋盘宽 rpx(750 - 2×32 页边距)
 
@@ -83,11 +84,15 @@ Page({
 
   /* ---------- 生命周期 ---------- */
   onLoad() {
-    // 设置
-    this.settings = Object.assign(
-      { sound: true, hint: true, theme: 'auto' },
-      storageGet(KEY_SETTINGS, {})
-    );
+    // 应用级主题设置(合集共用;老版本主题偏好存在 schulte.settings 里,做一次迁移)
+    this.appSettings = Object.assign({ theme: 'auto' }, storageGet(KEY_APP_SETTINGS, {}));
+    const legacy = storageGet(KEY_SETTINGS, {});
+    if (!storageGet(KEY_APP_SETTINGS, null) && legacy.theme) {
+      this.appSettings.theme = legacy.theme;
+      storageSet(KEY_APP_SETTINGS, this.appSettings);
+    }
+    // 本游戏设置
+    this.settings = Object.assign({ sound: true, hint: true }, legacy);
     // 系统主题(darkmode:true 时 getAppBaseInfo 返回 theme)
     try {
       this.sysTheme = wx.getAppBaseInfo().theme || 'light';
@@ -96,14 +101,14 @@ Page({
     }
     this.onThemeChangeHandler = (res) => {
       this.sysTheme = res.theme;
-      if (this.settings.theme === 'auto') this.applyTheme();
+      if (this.appSettings.theme === 'auto') this.applyTheme();
     };
     wx.onThemeChange(this.onThemeChangeHandler);
 
     // 音效(短音频用 useWebAudioImplement 降低延迟)
     const make = (file) => {
       const ctx = wx.createInnerAudioContext({ useWebAudioImplement: true });
-      ctx.src = `/assets/sounds/${file}`;
+      ctx.src = `/assets/sounds/schulte/${file}`;
       ctx.volume = 0.8;
       return ctx;
     };
@@ -136,15 +141,15 @@ Page({
 
   /* ---------- 主题 ---------- */
   applyTheme() {
-    const t = this.settings.theme;
+    const t = this.appSettings.theme;
     const dark = t === 'dark' || (t === 'auto' && this.sysTheme === 'dark');
     this.setData({ darkClass: dark ? 'dark' : '', themeIcon: THEME_ICONS[t] || '🌓' });
   },
 
   onThemeTap() {
-    const idx = THEMES.indexOf(this.settings.theme);
-    this.settings.theme = THEMES[(idx + 1) % THEMES.length] || 'auto';
-    storageSet(KEY_SETTINGS, this.settings);
+    const idx = THEMES.indexOf(this.appSettings.theme);
+    this.appSettings.theme = THEMES[(idx + 1) % THEMES.length] || 'auto';
+    storageSet(KEY_APP_SETTINGS, this.appSettings);
     this.applyTheme();
   },
 
@@ -408,7 +413,7 @@ Page({
   onShareAppMessage() {
     return {
       title: '舒尔特方块 — 来挑战你的注意力极限!',
-      path: '/pages/index/index',
+      path: '/pages/schulte/schulte',
     };
   },
 });
