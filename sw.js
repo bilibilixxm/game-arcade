@@ -1,11 +1,11 @@
 /* ==========================================================
-   舒尔特方块 Service Worker — 离线缓存
-   注意:修改了 index.html / style.css / app.js 等文件后,
-   必须把 CACHE_VERSION 升一位(如 v1 → v2),客户端才会拿到新版本。
+   Game Arcade Service Worker — 离线缓存(大厅 + 全部游戏)
+   注意:修改了任何被预缓存的文件后,必须把 CACHE_VERSION
+   升一位(如 v2 → v3),客户端才会拿到新版本。
    ========================================================== */
 'use strict';
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const PRECACHE = [
   './',
   './index.html',
@@ -18,6 +18,11 @@ const PRECACHE = [
   './games/schulte/index.html',
   './games/schulte/style.css',
   './games/schulte/app.js',
+  './games/tetris/',
+  './games/tetris/index.html',
+  './games/tetris/tetris.css',
+  './games/tetris/engine.js',
+  './games/tetris/app.js',
 ];
 
 self.addEventListener('install', (event) => {

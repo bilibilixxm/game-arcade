@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="俄罗斯方块 — 现代标准规则:Hold、幽灵投影、SRS 旋转与等级加速">
+  <title>俄罗斯方块</title>
+  <!-- PWA(清单与图标在仓库根目录) -->
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" type="image/png" href="../../icons/icon-192.png">
+  <!-- iOS 主屏 Web App -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="俄罗斯方块">
+  <link rel="apple-touch-icon" href="../../icons/icon-180.png">
+  <link rel="stylesheet" href="tetris.css">
+  <script src="engine.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- 顶部栏 -->
+    <header class="topbar">
+      <h1 class="title">俄罗斯方块</h1>
+      <div class="topbar-actions">
+        <button id="btn-theme" class="icon-btn" title="主题:跟随系统" aria-label="切换主题">🌓</button>
+        <button id="btn-sound" class="icon-btn" title="音效" aria-label="音效开关">🔊</button>
+        <button id="btn-pause" class="icon-btn" title="暂停" aria-label="暂停">⏸</button>
+        <button id="btn-history" class="icon-btn" title="历史记录" aria-label="历史记录">📊</button>
+      </div>
+    </header>
+
+    <!-- 状态栏 -->
+    <section class="status-bar">
+      <div class="stat">
+        <span class="stat-label">分数</span>
+        <span class="stat-value" id="stat-score">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">行数</span>
+        <span class="stat-value" id="stat-lines">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">等级</span>
+        <span class="stat-value" id="stat-level">1</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">最高分</span>
+        <span class="stat-value" id="stat-best">--</span>
+      </div>
+    </section>
+
+    <!-- 游戏舞台 -->
+    <main class="stage">
+      <aside class="panel">
+        <span class="panel-label">暂存</span>
+        <canvas id="cv-hold" class="preview"></canvas>
+      </aside>
+
+      <div class="board-wrap">
+        <canvas id="board" aria-label="俄罗斯方块棋盘"></canvas>
+        <!-- 开始遮罩 -->
+        <div class="start-overlay" id="start-overlay">
+          <div class="start-card">
+            <p class="start-title">消行升级 · <b>一次 4 行</b> 得分最高</p>
+            <p class="start-hint">支持键盘与触屏按钮</p>
+            <button class="btn btn-primary" id="btn-start">开始游戏</button>
+          </div>
+        </div>
+        <!-- 暂停遮罩 -->
+        <div class="start-overlay" id="pause-overlay" hidden>
+          <div class="start-card">
+            <p class="start-title">已暂停</p>
+            <button class="btn btn-primary" id="btn-resume">继续</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <span class="panel-label">预告</span>
+        <canvas id="cv-next0" class="preview"></canvas>
+        <canvas id="cv-next1" class="preview"></canvas>
+        <canvas id="cv-next2" class="preview"></canvas>
+      </aside>
+    </main>
+
+    <!-- 触控按钮(触屏设备显示) -->
+    <section class="touch-controls" id="touch-controls">
+      <div class="tc-row">
+        <button class="tc-btn" id="tc-left" aria-label="左移">←</button>
+        <button class="tc-btn" id="tc-down" aria-label="软降">↓</button>
+        <button class="tc-btn" id="tc-right" aria-label="右移">→</button>
+      </div>
+      <div class="tc-row">
+        <button class="tc-btn" id="tc-hold" aria-label="暂存"><span class="tc-sub">暂存</span></button>
+        <button class="tc-btn" id="tc-rotate" aria-label="旋转">↻</button>
+        <button class="tc-btn tc-accent" id="tc-drop" aria-label="硬降"><span class="tc-sub">硬降</span></button>
+      </div>
+    </section>
+
+    <footer class="foot-tip">← → 移动 · ↑/X 旋转 · Z 逆旋 · ↓ 软降 · 空格 硬降 · C 暂存 · P 暂停</footer>
+  </div>
+
+  <!-- 结果浮层 -->
+  <div class="modal" id="result-modal" hidden>
+    <div class="modal-card">
+      <p class="result-emoji" id="result-emoji">🎮</p>
+      <h2 class="result-title">游戏结束</h2>
+      <p class="result-record" id="result-record" hidden>🏆 新纪录!</p>
+      <div class="result-stats">
+        <div class="result-stat">
+          <span class="result-stat-label">本次得分</span>
+          <span class="result-stat-value" id="result-score">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">消行</span>
+          <span class="result-stat-value" id="result-lines">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">等级</span>
+          <span class="result-stat-value" id="result-level">1</span>
+        </div>
+      </div>
+      <p class="result-sub">用时 <b id="result-duration">0:00</b> · 历史最佳 <b id="result-best">0</b></p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-retry">再来一局</button>
+        <a class="btn btn-ghost" href="../../index.html">返回大厅</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录抽屉 -->
+  <div class="drawer-mask" id="drawer-mask" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="历史记录">
+    <header class="drawer-header">
+      <h2>历史记录</h2>
+      <button class="icon-btn" id="btn-close-drawer" aria-label="关闭">✕</button>
+    </header>
+
+    <section class="drawer-section">
+      <h3>历史最佳</h3>
+      <div class="best-summary">
+        <div class="result-stat">
+          <span class="result-stat-label">最高分</span>
+          <span class="result-stat-value" id="drawer-best-score">--</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">消行</span>
+          <span class="result-stat-value" id="drawer-best-lines">--</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">等级</span>
+          <span class="result-stat-value" id="drawer-best-level">--</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="drawer-section">
+      <h3>最近对局</h3>
+      <ul class="record-list" id="record-list"></ul>
+      <button class="btn btn-danger-ghost" id="btn-clear">清空全部记录</button>
+    </section>
+  </aside>
+</body>
+</html>
