@@ -1,7 +1,7 @@
 {
-  "name": "舒尔特方块",
-  "short_name": "舒尔特方块",
-  "description": "舒尔特方块注意力训练游戏",
+  "name": "Game Arcade · 游戏合集",
+  "short_name": "游戏合集",
+  "description": "纯前端小游戏合集:舒尔特方块、俄罗斯方块等",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="舒尔特方块注意力训练游戏">
+  <title>舒尔特方块</title>
+  <!-- PWA(清单与图标在仓库根目录) -->
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" type="image/png" href="../../icons/icon-192.png">
+  <!-- iOS 主屏 Web App -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="舒尔特方块">
+  <link rel="apple-touch-icon" href="../../icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- 顶部栏 -->
+    <header class="topbar">
+      <h1 class="title">舒尔特方块</h1>
+      <div class="topbar-actions">
+        <button id="btn-theme" class="icon-btn" title="主题:跟随系统" aria-label="切换主题">🌓</button>
+        <button id="btn-restart" class="icon-btn" title="重新开始" aria-label="重新开始">↻</button>
+        <button id="btn-history" class="icon-btn" title="历史记录" aria-label="历史记录">📊</button>
+      </div>
+    </header>
+
+    <!-- 模式选择区 -->
+    <nav class="mode-bar" id="mode-bar" aria-label="选择模式"></nav>
+
+    <!-- 设置开关 -->
+    <div class="settings" id="settings">
+      <label class="switch-item">
+        <span>🔊 音效</span>
+        <input type="checkbox" id="switch-sound" checked>
+        <span class="switch"></span>
+      </label>
+      <label class="switch-item">
+        <span>👁 下一目标提示</span>
+        <input type="checkbox" id="switch-hint" checked>
+        <span class="switch"></span>
+      </label>
+    </div>
+
+    <!-- 状态栏 -->
+    <section class="status-bar">
+      <div class="stat">
+        <span class="stat-label">用时</span>
+        <span class="stat-value" id="stat-time">0.00</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">进度</span>
+        <span class="stat-value"><span id="stat-progress">0</span><span class="stat-sub">/<span id="stat-total">25</span></span></span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">下一目标</span>
+        <span class="stat-value stat-target" id="stat-next">1</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">最佳</span>
+        <span class="stat-value" id="stat-best">--</span>
+      </div>
+    </section>
+
+    <!-- 游戏区 -->
+    <main class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="舒尔特方格"></div>
+      <!-- 开始遮罩 -->
+      <div class="start-overlay" id="start-overlay">
+        <div class="start-card">
+          <p class="start-title">按顺序点击 <b>1 → <span id="start-total">25</span></b></p>
+          <p class="start-hint">点击数字 1 开始计时</p>
+          <button class="btn btn-primary" id="btn-start">开始训练</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="foot-tip" id="foot-tip">点错的次数越少,注意力越集中 ✨</footer>
+  </div>
+
+  <!-- 结果浮层 -->
+  <div class="modal" id="result-modal" hidden>
+    <div class="modal-card">
+      <p class="result-emoji" id="result-emoji">🎉</p>
+      <h2 class="result-title" id="result-title">训练完成!</h2>
+      <p class="result-record" id="result-record" hidden>🏆 新纪录!</p>
+      <div class="result-stats">
+        <div class="result-stat">
+          <span class="result-stat-label">本次用时</span>
+          <span class="result-stat-value" id="result-time">0.00 秒</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">错误次数</span>
+          <span class="result-stat-value" id="result-errors">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">历史最佳</span>
+          <span class="result-stat-value" id="result-best">0.00 秒</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-retry">再来一次</button>
+        <button class="btn btn-ghost" id="btn-history2">查看历史</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录抽屉 -->
+  <div class="drawer-mask" id="drawer-mask" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="历史记录">
+    <header class="drawer-header">
+      <h2>历史记录</h2>
+      <button class="icon-btn" id="btn-close-drawer" aria-label="关闭">✕</button>
+    </header>
+
+    <section class="drawer-section">
+      <h3>各模式最快成绩</h3>
+      <div class="best-grid" id="best-grid"></div>
+    </section>
+
+    <section class="drawer-section">
+      <h3>最近训练</h3>
+      <ul class="record-list" id="record-list"></ul>
+      <button class="btn btn-danger-ghost" id="btn-clear">清空全部记录</button>
+    </section>
+  </aside>
+
+  <!-- iOS「添加到主屏幕」安装提示(未安装时显示) -->
+  <div class="install-tip" id="install-tip" hidden>
+    <span class="install-text">📱 点击<b>分享</b>按钮,选择「<b>添加到主屏幕</b>」即可像 App 一样全屏使用</span>
+    <button class="install-close" id="install-close" aria-label="关闭提示">✕</button>
+  </div>
+</body>
+</html>

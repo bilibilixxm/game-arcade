@@ -5,16 +5,19 @@
    ========================================================== */
 'use strict';
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const PRECACHE = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
+  './lobby.css',
   './manifest.json',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './games/schulte/',
+  './games/schulte/index.html',
+  './games/schulte/style.css',
+  './games/schulte/app.js',
 ];
 
 self.addEventListener('install', (event) => {

@@ -403,7 +403,7 @@ newGame(true);
    双击 index.html(file://)打开时自动跳过,功能不受影响 */
 if (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname)) {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('../../sw.js').catch(() => {});
   }
 }
 

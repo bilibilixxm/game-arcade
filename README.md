@@ -1,8 +1,10 @@
-# 舒尔特方块
+# Game Arcade · 游戏合集
 
-纯前端舒尔特方块(Schulte Grid)注意力训练游戏。零依赖、零构建,双击 `index.html` 直接游玩,同时提供**微信小程序版**(`miniprogram/`)。
+纯前端小游戏合集,零依赖、零构建。包含:**舒尔特方块**(注意力训练)、**俄罗斯方块**(现代标准版,开发中)。双击根目录 `index.html` 进入游戏大厅,同时提供**微信小程序版**(`miniprogram/`)。
 
-**网页在线使用**:https://bilibilixxm.github.io/schulte-grid/
+**网页在线使用**:https://bilibilixxm.github.io/game-arcade/
+
+> 目录 `games/<游戏名>/` 下每个子目录即一个独立游戏;新增游戏 = 新建一个子目录 + 大厅加一张卡片。
 
 ## iPhone 安装(添加到主屏幕)
 
