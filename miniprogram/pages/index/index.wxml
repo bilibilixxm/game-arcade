@@ -1,0 +1,142 @@
+<view class="page {{darkClass}}">
+
+  <!-- 顶部操作栏(标题由小程序导航栏提供) -->
+  <view class="topbar">
+    <view class="icon-btn" bindtap="onThemeTap" aria-label="切换主题">{{themeIcon}}</view>
+    <view class="icon-btn" bindtap="onRestartTap" aria-label="重新开始">↻</view>
+    <view class="icon-btn" bindtap="onHistoryTap" aria-label="历史记录">📊</view>
+  </view>
+
+  <!-- 模式选择区 -->
+  <scroll-view class="mode-bar" scroll-x enhanced show-scrollbar="{{false}}">
+    <view
+      wx:for="{{modes}}"
+      wx:key="size"
+      class="mode-btn {{item.size === size ? 'active' : ''}}"
+      data-size="{{item.size}}"
+      bindtap="onModeTap"
+    >
+      <view class="mode-name">{{item.size}}×{{item.size}}</view>
+      <view class="mode-best">{{item.bestText}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 设置开关 -->
+  <view class="settings">
+    <view class="switch-item">
+      <text>🔊 音效</text>
+      <switch checked="{{soundOn}}" bindchange="onSoundChange" color="#4f6ef7" />
+    </view>
+    <view class="switch-item">
+      <text>👁 下一目标提示</text>
+      <switch checked="{{hintOn}}" bindchange="onHintChange" color="#4f6ef7" />
+    </view>
+  </view>
+
+  <!-- 状态栏 -->
+  <view class="status-bar">
+    <view class="stat">
+      <text class="stat-label">用时</text>
+      <text class="stat-value">{{displayTime}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">进度</text>
+      <view class="stat-value">{{progress}}<text class="stat-sub">/{{total}}</text></view>
+    </view>
+    <view class="stat">
+      <text class="stat-label">下一目标</text>
+      <text class="stat-value stat-target">{{nextDisplay}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">最佳</text>
+      <text class="stat-value">{{bestText}}</text>
+    </view>
+  </view>
+
+  <!-- 游戏区 -->
+  <view class="board-wrap">
+    <view
+      class="board"
+      style="--cell-font: {{cellFont}}rpx; grid-template-columns: repeat({{size}}, 1fr); gap: {{boardGap}}rpx;"
+    >
+      <view
+        wx:for="{{cells}}"
+        wx:key="value"
+        class="cell {{item.done ? 'done' : ''}} {{item.hint ? 'hint' : ''}} {{item.wrong ? 'wrong' : ''}}"
+        data-index="{{index}}"
+        data-value="{{item.value}}"
+        bindtap="onCellTap"
+      >{{item.value}}</view>
+    </view>
+
+    <!-- 开始遮罩 -->
+    <view class="start-overlay" wx:if="{{overlayVisible}}">
+      <view class="start-card">
+        <view class="start-title">按顺序点击 <text class="hl">1 → {{total}}</text></view>
+        <view class="start-hint">点击数字 1 开始计时</view>
+        <button class="btn btn-primary" bindtap="onStartTap">开始训练</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="foot-tip">点错的次数越少,注意力越集中 ✨</view>
+
+  <!-- 结果浮层 -->
+  <view class="modal" wx:if="{{resultVisible}}" catchtouchmove="noop">
+    <view class="modal-card">
+      <view class="result-emoji">{{resultEmoji}}</view>
+      <view class="result-title">{{resultTitle}}</view>
+      <view class="result-record" wx:if="{{isNewRecord}}">🏆 新纪录!</view>
+      <view class="result-stats">
+        <view class="result-stat">
+          <text class="result-stat-label">本次用时</text>
+          <text class="result-stat-value">{{resultTime}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">错误次数</text>
+          <text class="result-stat-value">{{resultErrors}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">历史最佳</text>
+          <text class="result-stat-value">{{resultBest}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn btn-primary" bindtap="onRetryTap">再来一次</button>
+        <button class="btn btn-ghost" bindtap="onHistoryTap">查看历史</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史抽屉 -->
+  <view class="drawer-mask" wx:if="{{drawerVisible}}" bindtap="onCloseDrawer" catchtouchmove="noop"></view>
+  <scroll-view class="drawer" wx:if="{{drawerVisible}}" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="drawer-header">
+      <view class="drawer-title">历史记录</view>
+      <view class="icon-btn" bindtap="onCloseDrawer">✕</view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">各模式最快成绩</view>
+      <view class="best-grid">
+        <view class="best-item" wx:for="{{modes}}" wx:key="size">
+          <text class="best-mode">{{item.size}}×{{item.size}}</text>
+          <text class="best-time">{{item.bestText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">最近训练</view>
+      <view class="record-list" wx:if="{{records.length > 0}}">
+        <view class="record-item" wx:for="{{records}}" wx:key="key">
+          <text class="rec-mode">{{item.modeText}}</text>
+          <text class="rec-time">{{item.timeText}}</text>
+          <text class="rec-meta">{{item.metaText}}</text>
+        </view>
+      </view>
+      <view class="record-empty" wx:else>暂无训练记录,快开始第一次训练吧!</view>
+      <button class="btn-danger-ghost" bindtap="onClearTap">清空全部记录</button>
+    </view>
+  </scroll-view>
+</view>

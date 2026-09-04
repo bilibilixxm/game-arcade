@@ -1,0 +1,4 @@
+/* 全局样式:变量定义在页面 page 选择器上(见 pages/index/index.wxss) */
+Page {
+  background: var(--bg);
+}

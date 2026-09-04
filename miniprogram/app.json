@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "舒尔特方块",
+    "navigationBarBackgroundColor": "@navBg",
+    "navigationBarTextStyle": "@navTxt",
+    "backgroundColor": "@pageBg",
+    "backgroundTextStyle": "@bgTxt"
+  },
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}
