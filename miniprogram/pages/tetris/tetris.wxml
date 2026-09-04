@@ -1,0 +1,161 @@
+<view class="page {{darkClass}}">
+
+  <!-- 顶部操作栏(标题由小程序导航栏提供) -->
+  <view class="topbar">
+    <view class="icon-btn" bindtap="onThemeTap" aria-label="切换主题">{{themeIcon}}</view>
+    <view class="icon-btn" bindtap="onPauseTap" aria-label="暂停/继续">{{pauseIcon}}</view>
+    <view class="icon-btn" bindtap="onHistoryTap" aria-label="历史记录">📊</view>
+  </view>
+
+  <!-- 状态栏 -->
+  <view class="status-bar">
+    <view class="stat">
+      <text class="stat-label">分数</text>
+      <text class="stat-value">{{displayScore}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">行数</text>
+      <text class="stat-value">{{lines}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">等级</text>
+      <text class="stat-value">{{level}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">最高分</text>
+      <text class="stat-value">{{bestText}}</text>
+    </view>
+  </view>
+
+  <!-- 游戏舞台 -->
+  <view class="stage">
+    <view class="panel">
+      <text class="panel-label">暂存</text>
+      <canvas type="2d" id="cv-hold" class="preview hold-preview"></canvas>
+    </view>
+
+    <view class="board-wrap">
+      <canvas type="2d" id="board" class="board"></canvas>
+      <!-- 开始遮罩 -->
+      <view class="start-overlay" wx:if="{{overlayVisible}}">
+        <view class="start-card">
+          <view class="start-title">消行升级 · 一次 4 行得分最高</view>
+          <button class="btn btn-primary" bindtap="onStartTap">开始游戏</button>
+        </view>
+      </view>
+      <!-- 暂停遮罩 -->
+      <view class="start-overlay" wx:if="{{pauseVisible}}">
+        <view class="start-card">
+          <view class="start-title">已暂停</view>
+          <button class="btn btn-primary" bindtap="onResumeTap">继续</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="panel">
+      <text class="panel-label">预告</text>
+      <canvas type="2d" id="cv-next" class="preview next-preview"></canvas>
+    </view>
+  </view>
+
+  <!-- 触控按钮 -->
+  <view class="touch-controls">
+    <view class="tc-row">
+      <view
+        class="tc-btn {{pressed.left ? 'pressing' : ''}}"
+        data-act="left"
+        bindtouchstart="onBtnDown"
+        bindtouchend="onBtnUp"
+        bindtouchcancel="onBtnUp"
+      >←</view>
+      <view
+        class="tc-btn {{pressed.down ? 'pressing' : ''}}"
+        data-act="down"
+        bindtouchstart="onBtnDown"
+        bindtouchend="onBtnUp"
+        bindtouchcancel="onBtnUp"
+      >↓</view>
+      <view
+        class="tc-btn {{pressed.right ? 'pressing' : ''}}"
+        data-act="right"
+        bindtouchstart="onBtnDown"
+        bindtouchend="onBtnUp"
+        bindtouchcancel="onBtnUp"
+      >→</view>
+    </view>
+    <view class="tc-row">
+      <view class="tc-btn" data-act="hold" bindtouchstart="onBtnDown"><view class="tc-sub">暂存</view></view>
+      <view class="tc-btn" data-act="rotate" bindtouchstart="onBtnDown">↻</view>
+      <view class="tc-btn tc-accent" data-act="hard" bindtouchstart="onBtnDown"><view class="tc-sub">硬降</view></view>
+    </view>
+  </view>
+
+  <view class="foot-tip">支持触屏按钮 · 消一行 100 分,四行连消 800 分 ✨</view>
+
+  <!-- 结果浮层 -->
+  <view class="modal" wx:if="{{resultVisible}}" catchtouchmove="noop">
+    <view class="modal-card">
+      <view class="result-emoji">{{resultEmoji}}</view>
+      <view class="result-title">游戏结束</view>
+      <view class="result-record" wx:if="{{isNewRecord}}">🏆 新纪录!</view>
+      <view class="result-stats">
+        <view class="result-stat">
+          <text class="result-stat-label">本次得分</text>
+          <text class="result-stat-value">{{resultScore}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">消行</text>
+          <text class="result-stat-value">{{resultLines}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">等级</text>
+          <text class="result-stat-value">{{resultLevel}}</text>
+        </view>
+      </view>
+      <view class="result-sub">用时 {{resultDuration}} · 历史最佳 {{resultBest}}</view>
+      <view class="modal-actions">
+        <button class="btn btn-primary" bindtap="onRetryTap">再来一局</button>
+        <button class="btn btn-ghost" bindtap="onHistoryTap">查看历史</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史抽屉 -->
+  <view class="drawer-mask" wx:if="{{drawerVisible}}" bindtap="onCloseDrawer" catchtouchmove="noop"></view>
+  <scroll-view class="drawer" wx:if="{{drawerVisible}}" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="drawer-header">
+      <view class="drawer-title">历史记录</view>
+      <view class="icon-btn" bindtap="onCloseDrawer">✕</view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">历史最佳</view>
+      <view class="best-summary">
+        <view class="result-stat">
+          <text class="result-stat-label">最高分</text>
+          <text class="result-stat-value">{{drawerBestScore}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">消行</text>
+          <text class="result-stat-value">{{drawerBestLines}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">等级</text>
+          <text class="result-stat-value">{{drawerBestLevel}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">最近对局</view>
+      <view class="record-list" wx:if="{{records.length > 0}}">
+        <view class="record-item" wx:for="{{records}}" wx:key="key">
+          <text class="rec-score">{{item.scoreText}} 分</text>
+          <text class="rec-meta">{{item.metaText}}</text>
+        </view>
+      </view>
+      <view class="record-empty" wx:else>暂无对局记录,快开始第一局吧!</view>
+      <button class="btn-danger-ghost" bindtap="onClearTap">清空全部记录</button>
+    </view>
+  </scroll-view>
+</view>

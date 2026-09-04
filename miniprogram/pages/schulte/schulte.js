@@ -409,6 +409,9 @@ Page({
     });
   },
 
+  /* ---------- 占位(catchtouchmove 防滚动穿透) ---------- */
+  noop() {},
+
   /* ---------- 分享 ---------- */
   onShareAppMessage() {
     return {

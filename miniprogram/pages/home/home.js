@@ -49,9 +49,9 @@ Page({
         icon: '🧱',
         name: '俄罗斯方块',
         desc: '现代标准规则:Hold、幽灵投影、硬降与等级加速',
-        bestLabel: '',
+        bestLabel: '最高分',
         bestText: '--',
-        comingSoon: true,
+        comingSoon: false,
       },
     ],
     darkClass: '',
@@ -124,6 +124,10 @@ Page({
     const id = e.currentTarget.dataset.id;
     if (id === 'schulte') {
       wx.navigateTo({ url: '/pages/schulte/schulte' });
+      return;
+    }
+    if (id === 'tetris') {
+      wx.navigateTo({ url: '/pages/tetris/tetris' });
       return;
     }
     wx.showToast({ title: '即将上线,敬请期待', icon: 'none' });

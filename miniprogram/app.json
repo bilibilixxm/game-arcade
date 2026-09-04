@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/schulte/schulte"
+    "pages/schulte/schulte",
+    "pages/tetris/tetris"
   ],
   "window": {
     "navigationBarTitleText": "游戏合集",
