@@ -42,6 +42,15 @@ function sawtooth(phase) {
   return 2 * (phase - Math.floor(phase + 0.5));
 }
 
+function sine(phase) {
+  return Math.sin(2 * Math.PI * phase);
+}
+
+/* 白噪声(每次生成样本不同,听感一致;爆炸/碎砖用) */
+function noiseWave() {
+  return Math.random() * 2 - 1;
+}
+
 // 单个音符:freq Hz,dur 秒,从 t0 秒开始;attack 5ms + 指数衰减,消除爆音
 function addNote(out, freq, t0, dur, wave, gain = 0.5) {
   const start = Math.floor(t0 * SR);
@@ -55,9 +64,26 @@ function addNote(out, freq, t0, dur, wave, gain = 0.5) {
   }
 }
 
+/* 滑音音符:freq 线性滑向 freqEnd(坦克大战炮弹/低频爆炸用) */
+function addNoteSlide(out, freq, freqEnd, t0, dur, wave, gain = 0.5) {
+  const start = Math.floor(t0 * SR);
+  const len = Math.floor(dur * SR);
+  const attack = Math.floor(0.005 * SR);
+  let phase = 0;
+  for (let i = 0; i < len; i++) {
+    const env =
+      i < attack ? i / attack : Math.pow(0.0008, (i - attack) / (len - attack));
+    phase += (freq + (freqEnd - freq) * (i / len)) / SR;
+    out[start + i] += wave(phase) * env * gain;
+  }
+}
+
 function mix(notes, totalSec) {
   const out = new Float32Array(Math.ceil(totalSec * SR));
-  for (const n of notes) addNote(out, n.freq, n.t0, n.dur, n.wave, n.gain);
+  for (const n of notes) {
+    if (n.freqEnd) addNoteSlide(out, n.freq, n.freqEnd, n.t0, n.dur, n.wave, n.gain);
+    else addNote(out, n.freq, n.t0, n.dur, n.wave, n.gain);
+  }
   return out;
 }
 
@@ -103,6 +129,79 @@ const GROUPS = {
         { freq: 783.99, t0: 0.2, dur: 0.22, wave: triangle, gain: 0.45 },
       ],
       0.5
+    ),
+    // 游戏结束:下行三音
+    'gameover.wav': mix(
+      [
+        { freq: 523.25, t0: 0, dur: 0.18, wave: triangle, gain: 0.4 },
+        { freq: 392, t0: 0.18, dur: 0.18, wave: triangle, gain: 0.4 },
+        { freq: 261.63, t0: 0.36, dur: 0.35, wave: triangle, gain: 0.45 },
+      ],
+      0.8
+    ),
+  },
+  // 坦克大战
+  'battle-city': {
+    // 开炮:方波 900→240 快速下滑
+    'shoot.wav': mix([{ freq: 900, freqEnd: 240, t0: 0, dur: 0.07, wave: sawtooth, gain: 0.3 }], 0.1),
+    // 碎砖:短噪声
+    'brick.wav': mix([{ freq: 0, t0: 0, dur: 0.06, wave: noiseWave, gain: 0.35 }], 0.09),
+    // 打钢:金属高音
+    'steel.wav': mix([{ freq: 1250, t0: 0, dur: 0.05, wave: sawtooth, gain: 0.28 }], 0.08),
+    // 弹弹互消:低音 + 噪声
+    'cancel.wav': mix(
+      [
+        { freq: 320, t0: 0, dur: 0.05, wave: sawtooth, gain: 0.3 },
+        { freq: 0, t0: 0, dur: 0.04, wave: noiseWave, gain: 0.2 },
+      ],
+      0.08
+    ),
+    // 小爆炸(子弹命中):中噪声
+    'explode.wav': mix([{ freq: 0, t0: 0, dur: 0.18, wave: noiseWave, gain: 0.45 }], 0.22),
+    // 大爆炸(坦克/基地):长噪声 + 低频三角波下滑
+    'explode-big.wav': mix(
+      [
+        { freq: 0, t0: 0, dur: 0.45, wave: noiseWave, gain: 0.5 },
+        { freq: 90, freqEnd: 45, t0: 0, dur: 0.35, wave: triangle, gain: 0.5 },
+      ],
+      0.5
+    ),
+    // 拾取道具:上行三音
+    'pickup.wav': mix(
+      [
+        { freq: 660, t0: 0, dur: 0.08, wave: triangle, gain: 0.42 },
+        { freq: 880, t0: 0.08, dur: 0.08, wave: triangle, gain: 0.42 },
+        { freq: 1100, t0: 0.16, dur: 0.16, wave: triangle, gain: 0.45 },
+      ],
+      0.36
+    ),
+    // 道具出现:双音
+    'powerup.wav': mix(
+      [
+        { freq: 520, t0: 0, dur: 0.1, wave: triangle, gain: 0.4 },
+        { freq: 780, t0: 0.12, dur: 0.14, wave: triangle, gain: 0.4 },
+      ],
+      0.3
+    ),
+    // 奖命:C5-E5-G5-C6 上行
+    'extra-life.wav': mix(
+      [
+        { freq: 523.25, t0: 0, dur: 0.09, wave: triangle, gain: 0.4 },
+        { freq: 659.25, t0: 0.1, dur: 0.09, wave: triangle, gain: 0.4 },
+        { freq: 783.99, t0: 0.2, dur: 0.09, wave: triangle, gain: 0.4 },
+        { freq: 1046.5, t0: 0.3, dur: 0.24, wave: triangle, gain: 0.45 },
+      ],
+      0.6
+    ),
+    // 过关:G4-C5-E5-G5 号角式上行
+    'stage-clear.wav': mix(
+      [
+        { freq: 392, t0: 0, dur: 0.12, wave: triangle, gain: 0.42 },
+        { freq: 523.25, t0: 0.13, dur: 0.12, wave: triangle, gain: 0.42 },
+        { freq: 659.25, t0: 0.26, dur: 0.12, wave: triangle, gain: 0.42 },
+        { freq: 783.99, t0: 0.39, dur: 0.3, wave: triangle, gain: 0.45 },
+      ],
+      0.75
     ),
     // 游戏结束:下行三音
     'gameover.wav': mix(

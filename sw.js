@@ -5,7 +5,7 @@
    ========================================================== */
 'use strict';
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const PRECACHE = [
   './',
   './index.html',
@@ -23,6 +23,13 @@ const PRECACHE = [
   './games/tetris/tetris.css',
   './games/tetris/engine.js',
   './games/tetris/app.js',
+  './games/battle-city/',
+  './games/battle-city/index.html',
+  './games/battle-city/battle-city.css',
+  './games/battle-city/engine.js',
+  './games/battle-city/levels.js',
+  './games/battle-city/sprites.js',
+  './games/battle-city/app.js',
 ];
 
 self.addEventListener('install', (event) => {

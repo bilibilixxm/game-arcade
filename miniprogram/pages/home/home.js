@@ -7,6 +7,7 @@
 const KEY_APP_SETTINGS = 'arcade.settings'; // 应用级设置(theme,合集共用)
 const KEY_SCHULTE_BEST = 'schulte.best'; // { size: { time, date } }
 const KEY_TETRIS_BEST = 'tetris.best'; // { score, lines, level, date }
+const KEY_BATTLE_CITY_BEST = 'battle-city.best'; // { score, level, date }
 
 const THEME_ICONS = { auto: '🌓', light: '☀️', dark: '🌙' };
 const THEMES = ['auto', 'light', 'dark'];
@@ -49,6 +50,15 @@ Page({
         icon: '🧱',
         name: '俄罗斯方块',
         desc: '现代标准规则:Hold、幽灵投影、硬降与等级加速',
+        bestLabel: '最高分',
+        bestText: '--',
+        comingSoon: false,
+      },
+      {
+        id: 'battle-city',
+        icon: '🛡️',
+        name: '坦克大战',
+        desc: '红白机经典复刻:保卫基地、35 关、道具火力',
         bestLabel: '最高分',
         bestText: '--',
         comingSoon: false,
@@ -113,9 +123,15 @@ Page({
     const tBest = storageGet(KEY_TETRIS_BEST, null);
     if (tBest && tBest.score) tetrisText = fmtScore(tBest.score);
 
+    // 坦克大战:最高分
+    let cityText = '--';
+    const cBest = storageGet(KEY_BATTLE_CITY_BEST, null);
+    if (cBest && cBest.score) cityText = fmtScore(cBest.score);
+
     this.setData({
       'games[0].bestText': schulteText,
       'games[1].bestText': tetrisText,
+      'games[2].bestText': cityText,
     });
   },
 
@@ -128,6 +144,10 @@ Page({
     }
     if (id === 'tetris') {
       wx.navigateTo({ url: '/pages/tetris/tetris' });
+      return;
+    }
+    if (id === 'battle-city') {
+      wx.navigateTo({ url: '/pages/battle-city/battle-city' });
       return;
     }
     wx.showToast({ title: '即将上线,敬请期待', icon: 'none' });

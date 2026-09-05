@@ -1,6 +1,6 @@
 # Game Arcade · 游戏合集
 
-纯前端小游戏合集,零依赖、零构建。包含:**舒尔特方块**(注意力训练)、**俄罗斯方块**(现代标准版)。打开根目录 `index.html` 进入游戏大厅,同时提供**微信小程序版**(`miniprogram/`)。
+纯前端小游戏合集,零依赖、零构建。包含:**舒尔特方块**(注意力训练)、**俄罗斯方块**(现代标准版)、**坦克大战**(红白机经典复刻)。打开根目录 `index.html` 进入游戏大厅,同时提供**微信小程序版**(`miniprogram/`)。
 
 **网页在线使用**:https://bilibilixxm.github.io/game-arcade/
 
@@ -36,15 +36,28 @@
 - 手机自动显示触控按钮(长按左右/软降连续生效);切后台自动暂停
 - 右上角 📊 查看最近 50 局与历史最高分
 
-两个游戏均支持**浅色/深色/跟随系统**三种主题(右上角 🌓 切换,合集内记忆)。
+### 坦克大战(`games/battle-city/`)
+
+红白机 Battle City 复刻:保卫基地鹰徽,消灭每关 20 辆敌军坦克。
+
+- **35 个关卡**(凭记忆还原原版布局),5 种地形:砖(可被击毁)/ 钢(仅 4 级火力可毁)/ 河(挡车不挡弹)/ 树(遮挡视线)/ 冰(滑行惯性)
+- **4 种敌方坦克**:装甲车 100 分 / 猎豹 200 分 / 重炮 300 分 / 重坦 400 分(4 点血,受击变色);每关第 4/11/18 辆**闪红**,击毁掉落道具
+- **6 种道具**(各 +500 分):头盔(护盾)/ 时钟(冻结全场)/ 铁锹(基地砖墙升级钢墙,限时)/ 星星(火力 +1)/ 炸弹(全灭场上敌军)/ 坦克(+1 命);每 20000 分奖 1 命
+- **火力 1~4 档**:1 慢弹 → 2 快弹 → 3 双发 → 4 双发+可破钢+咬两排砖;阵亡后火力归 1,星星跨关保留
+- **基地被毁或生命耗尽**即失败;20 辆全灭过关,得分与火力带入下一关
+- 键盘:**1P** `WASD` 移动 + `空格` 开火;**2P**(网页版双人)方向键移动 + `回车` 开火;`P`/`Esc` 暂停
+- 手机显示方向盘 + FIRE 触控键;小程序版为单人(1P)
+- 右上角 📊 查看最近 50 局与历史最高分
+
+所有游戏均支持**浅色/深色/跟随系统**三种主题(右上角 🌓 切换,合集内记忆)。
 
 ## 技术说明
 
-- 网页版:每个游戏独立三/四文件(`index.html + *.css + *.js`),俄罗斯方块逻辑抽为 `games/tetris/engine.js`(UMD,不碰 DOM)
-- PWA:`manifest.json + sw.js` 提供;**改网页代码后需将 `sw.js` 中 `CACHE_VERSION` 升一位**(如 v3 → v4),客户端才能更新缓存
-- 小程序版:`miniprogram/` 目录,`pages/home` 为大厅;俄罗斯方块直接 `require('libs/tetris-engine.js')` 复用同一算法(**该文件是 Web 侧 engine.js 的拷贝,改动后需同步**)
-- 引擎单测:`node tools/tetris-engine.test.js`(33 项:7-bag 分布、SRS 踢墙、计分、Hold、锁定延迟、游戏结束判定)
-- 资产均由 `tools/` 下脚本纯 Node 生成(零依赖):`node tools/gen-icons.js`、`node tools/gen-sounds.js`
+- 网页版:每个游戏独立三/四文件(`index.html + *.css + *.js`),游戏逻辑抽为 UMD 引擎(`games/tetris/engine.js`、`games/battle-city/{engine,levels,sprites}.js`,不碰 DOM)
+- PWA:`manifest.json + sw.js` 提供;**改网页代码后需将 `sw.js` 中 `CACHE_VERSION` 升一位**(如 v7 → v8),客户端才能更新缓存
+- 小程序版:`miniprogram/` 目录,`pages/home` 为大厅;引擎文件 `require('libs/*.js')` 复用同一算法(**这些文件是 Web 侧的拷贝,改动后需同步**)
+- 引擎单测:`node tools/tetris-engine.test.js`(39 项:7-bag 分布、SRS 踢墙、计分、Hold、锁定延迟、游戏结束判定);`node tools/battle-city-engine.test.js`(62 项:移动吸附、地形碰撞、破坏粒度、刷新节奏、6 道具、计分、AI 确定性)
+- 资产均由 `tools/` 下脚本纯 Node 生成(零依赖):`node tools/gen-icons.js`、`node tools/gen-sounds.js`(音效含 schulte/tetris/battle-city 三组)
 
 ## 微信小程序版使用
 
@@ -76,12 +89,18 @@ miniprogram/
 ├── app.json / app.js / app.wxss
 ├── theme.json                 # 深色模式导航栏/窗口配色
 ├── sitemap.json
-├── libs/tetris-engine.js      # 俄罗斯方块引擎(Web 侧副本)
+├── libs/                      # 游戏引擎(Web 侧规范源的副本,改动后需同步)
+│   ├── tetris-engine.js
+│   ├── battle-city-engine.js
+│   ├── battle-city-levels.js
+│   └── battle-city-sprites.js
 ├── assets/sounds/
 │   ├── schulte/*.wav          # 音效(tools/gen-sounds.js 生成)
-│   └── tetris/*.wav
+│   ├── tetris/*.wav
+│   └── battle-city/*.wav
 └── pages/
     ├── home/                  # 游戏大厅(入口页)
     ├── schulte/               # 舒尔特方块
-    └── tetris/                # 俄罗斯方块
+    ├── tetris/                # 俄罗斯方块
+    └── battle-city/           # 坦克大战
 ```

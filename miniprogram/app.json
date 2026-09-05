@@ -2,7 +2,8 @@
   "pages": [
     "pages/home/home",
     "pages/schulte/schulte",
-    "pages/tetris/tetris"
+    "pages/tetris/tetris",
+    "pages/battle-city/battle-city"
   ],
   "window": {
     "navigationBarTitleText": "游戏合集",

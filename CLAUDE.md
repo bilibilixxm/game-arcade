@@ -9,23 +9,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ```bash
-# 俄罗斯方块引擎单测(纯 Node,无测试框架,39 项断言直接跑)
-node tools/tetris-engine.test.js
+# 引擎单测(纯 Node,无测试框架,直接跑)
+node tools/tetris-engine.test.js      # 39 项断言
+node tools/battle-city-engine.test.js # 62 项断言
 
 # 重新生成资产(纯 Node 零依赖)
 node tools/gen-icons.js     # icons/icon-{180,192,512}.png(马赛克手柄像素画)
-node tools/gen-sounds.js    # miniprogram/assets/sounds/{schulte,tetris}/*.wav
+node tools/gen-sounds.js    # miniprogram/assets/sounds/{schulte,tetris,battle-city}/*.wav
 
 # 本地服务器(PWA/SW 测试需要 http;8123 被本机 Home Assistant 占用,用 8917)
 python3 -m http.server 8917
 ```
 
-**Playwright UI 测试**(schulte 35 项 / lobby 7 项 / tetris 36 项 / PWA 14 项)不进仓库,放在 `/tmp/schulte-test/`(test.js、lobby-test.js、tetris-test.js、pwa-test.js),用 `playwright-core` 指向本机 chrome-headless-shell:
-
-```bash
-EXE=~/Library/Caches/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-mac-arm64/chrome-headless-shell
-# schulte/tetris/lobby 测试用 file:// URL;PWA 测试需先起 http.server 8917
-```
+**Playwright UI 测试**(schulte 35 项 / lobby 7 项 / tetris 36 项 / battle-city 39 项 / PWA 17 项)不进仓库,放在 `/tmp/schulte-test/`(test.js、lobby-test.js、tetris-test.js、battle-city-test.js、pwa-test.js),用 `playwright-core` 指向本机 chrome-headless-shell:
 
 若 `/tmp/schulte-test/` 已被清理,需按上述断言数量重写测试脚本(它们覆盖:PWA 预缓存计数、离线可玩、iOS 安装提示三态、tetris 键盘+触控流、canvas 渲染位置像素断言、大厅与子页 localStorage 联动)。
 
@@ -37,10 +33,20 @@ EXE=~/Library/Caches/ms-playwright/chromium_headless_shell-1208/chrome-headless-
 
 `games/tetris/engine.js` 是**规范源**:UMD 纯逻辑引擎(7-bag、SRS 踢墙、Hold、锁定延迟、计分),不碰 DOM/wx。`miniprogram/libs/tetris-engine.js` 是它的**手动同步副本**。改引擎必须:①同步副本(diff 两文件从 `(function (root, factory)` 起应完全一致);②跑 `node tools/tetris-engine.test.js`。
 
+battle-city 有**三个**规范源文件与副本:`games/battle-city/{engine,levels,sprites}.js` ↔ `miniprogram/libs/battle-city-{engine,levels,sprites}.js`(副本头部是自定义注释,从 UMD 标记行起逐字节一致),单测 `node tools/battle-city-engine.test.js`。
+
 引擎注意点:
 - `pieceCells()` 返回**绝对坐标**(曾因 UI 层把它当相对坐标再叠加 `current.y` 导致方块画偏,两平台同踩)
 - `lastDrop = -1` 哨兵(falsy 0 问题);`reset({level})` 支持起始难度,升级取 `max(startLevel, floor(lines/10)+1)`
 - 引擎无回调;UI 层用 watch 模式判定锁定/消行/升级:动作前 `beginWatch()` 记录 `current` 引用与 lines/level,动作后 `endWatch()` 对比(hold 走 `endWatch(false)` 不出锁定音)
+
+battle-city 注意点:
+- 地形存**字母码** `'B'/'S'/'W'/'T'/'I'/'F'`(8px 子格 26×26),渲染层需 `TILE_KEYS` 映射到精灵表键,且**必须跳过 'F'**(基地,不在 TILES 里——曾因漏跳导致页面启动即崩)
+- 精灵只存上向基准图,`rotateCW` 旋转出 4 方向;armor 变色/bonus 闪红全部用**调色板替换**(零额外图);平台侧把 grid+palette 物化为离屏 canvas 并缓存,每帧只 drawImage
+- 静态地形预渲染两层离屏(普通层 + 树置顶层),水帧翻转(400ms)时才重建;**杜绝逐像素 fillRect 进主循环**(小程序性能关键)
+- 1P 出生点 (64,192) 右侧紧贴基地护墙大格 (5,12),开局向右被挡是**原版行为**(测试勿当 bug)
+- 直线移动是连续坐标,只有**转向时垂直轴才吸附 8px**;引擎 fire 是上升沿单发(`keyboard.press` 同帧 down+up 触发不了)
+- 事件队列 `drainEvents()` 驱动音效/特效(引擎无回调)
 
 ### 每游戏独立目录 + 三层共享件
 
@@ -55,11 +61,11 @@ miniprogram/pages/{home,schulte,tetris}/  # 小程序:home 大厅 → wx.navigat
 
 ### PWA 缓存
 
-改了任何被预缓存的文件后,**必须把 `sw.js` 的 `CACHE_VERSION` 升一位**,否则客户端永远拿旧缓存。PRECACHE 清单手动维护(当前 16 项:根 7 + schulte 4 + tetris 5)。SW 仅在 https/localhost 注册(`file://` 打开时跳过)。
+改了任何被预缓存的文件后,**必须把 `sw.js` 的 `CACHE_VERSION` 升一位**,否则客户端永远拿旧缓存。PRECACHE 清单手动维护(当前 22 项:根 7 + schulte 4 + tetris 5 + battle-city 6)。SW 仅在 https/localhost 注册(`file://` 打开时跳过)。
 
 ### 存储(两平台同名键)
 
-Web 用 localStorage、小程序用 wx storage,键名一致:`tetris.records`(≤50 条,含 `end: 'over'|'quit'` 标记结束方式)、`tetris.best`、`tetris.settings`(含 startLevel);`arcade.settings.theme` 为合集级主题(schulte 的老偏好会迁移过来)。两平台存储互相独立。
+Web 用 localStorage、小程序用 wx storage,键名一致:`tetris.records`(≤50 条,含 `end: 'over'|'quit'` 标记结束方式)、`tetris.best`、`tetris.settings`(含 startLevel);`battle-city.records`(≤50 条,含 `end` 与 `player: '1P'|'2P'`——网页双人局存两条)/`battle-city.best`/`battle-city.settings`;`arcade.settings.theme` 为合集级主题(schulte 的老偏好会迁移过来;小程序各游戏页共用它)。两平台存储互相独立。
 
 ### 主题方案
 
@@ -67,7 +73,7 @@ Web:CSS 变量三段(`:root` / `[data-theme=dark]` / `@media prefers-color-schem
 
 ### 小程序渲染
 
-canvas `type="2d"`:`SelectorQuery` 取 node+size、`wx.getWindowInfo().pixelRatio` 设物理尺寸、`canvas.requestAnimationFrame` 驱动。触控按钮用 `bindtouchstart/end/cancel` + `data-act`,长按重复(DAS/ARR/SOFT_ARR)与 Web 版常量一致。浮层用 `catchtouchmove="noop"` 防滚动穿透(页面需有 `noop(){}` 方法)。
+canvas `type="2d"`:`SelectorQuery` 取 node+size、`wx.getWindowInfo().pixelRatio` 设物理尺寸、`canvas.requestAnimationFrame` 驱动。触控按钮用 `bindtouchstart/end/cancel` + `data-act`,长按重复(DAS/ARR/SOFT_ARR)与 Web 版常量一致。浮层用 `catchtouchmove="noop"` 防滚动穿透(页面需有 `noop(){}` 方法)。离屏精灵用 `wx.createOffscreenCanvas({type:'2d', width, height})`。小程序无自动化测试时可用 Node 仿真(`wx`/`Page` 全局 + Proxy 假 canvas,见 `/tmp/schulte-test/battle-city-mp-harness.js` 的做法)驱动页面全流程。
 
 ## 安全红线
 

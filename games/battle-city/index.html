@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="坦克大战 — 红白机经典复刻:保卫基地、35 关、双人同屏">
+  <title>坦克大战</title>
+  <!-- PWA(清单与图标在仓库根目录) -->
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" type="image/png" href="../../icons/icon-192.png">
+  <!-- iOS 主屏 Web App -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="坦克大战">
+  <link rel="apple-touch-icon" href="../../icons/icon-180.png">
+  <link rel="stylesheet" href="battle-city.css">
+  <script src="engine.js" defer></script>
+  <script src="levels.js" defer></script>
+  <script src="sprites.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- 顶部栏 -->
+    <header class="topbar">
+      <h1 class="title">坦克大战</h1>
+      <div class="topbar-actions">
+        <button id="btn-theme" class="icon-btn" title="主题:跟随系统" aria-label="切换主题">🌓</button>
+        <button id="btn-sound" class="icon-btn" title="音效" aria-label="音效开关">🔊</button>
+        <button id="btn-pause" class="icon-btn" title="暂停" aria-label="暂停">⏸</button>
+        <button id="btn-history" class="icon-btn" title="历史记录" aria-label="历史记录">📊</button>
+      </div>
+    </header>
+
+    <!-- 状态栏 -->
+    <section class="status-bar">
+      <div class="stat">
+        <span class="stat-label">得分</span>
+        <span class="stat-value" id="stat-score">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">关卡</span>
+        <span class="stat-value" id="stat-stage">1</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">敌军</span>
+        <span class="stat-value" id="stat-enemy">20</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">最高分</span>
+        <span class="stat-value" id="stat-best">--</span>
+      </div>
+    </section>
+
+    <!-- 游戏舞台 -->
+    <main class="stage">
+      <aside class="panel">
+        <span class="panel-label">玩家</span>
+        <div class="side-box" id="p1-box">
+          <b class="side-tag tag-p1">1P</b>
+          <span class="side-val" id="p1-lives">❤×3</span>
+          <span class="side-val" id="p1-power">★1</span>
+        </div>
+        <div class="side-box" id="p2-box" hidden>
+          <b class="side-tag tag-p2">2P</b>
+          <span class="side-val" id="p2-lives">❤×3</span>
+          <span class="side-val" id="p2-power">★1</span>
+        </div>
+      </aside>
+
+      <div class="board-wrap">
+        <canvas id="board" aria-label="坦克大战战场"></canvas>
+        <!-- 开始遮罩 -->
+        <div class="start-overlay" id="start-overlay">
+          <div class="start-card">
+            <p class="start-title">保卫基地 · 消灭 <b>20</b> 辆敌坦</p>
+            <div class="mode-pick" role="group" aria-label="游戏模式">
+              <button class="mode-btn active" id="btn-mode-1p">单人</button>
+              <button class="mode-btn" id="btn-mode-2p">双人</button>
+            </div>
+            <p class="start-hint" id="start-hint">1P:WASD 移动 · 空格开火<br>2P:方向键移动 · 回车开火</p>
+            <button class="btn btn-primary" id="btn-start">开始游戏</button>
+          </div>
+        </div>
+        <!-- 暂停遮罩 -->
+        <div class="start-overlay" id="pause-overlay" hidden>
+          <div class="start-card">
+            <p class="start-title">已暂停</p>
+            <button class="btn btn-primary" id="btn-resume">继续</button>
+            <button class="btn btn-ghost" id="btn-finish">结束本局</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <span class="panel-label">敌军</span>
+        <canvas id="cv-enemy" class="preview"></canvas>
+        <span class="panel-label">基地</span>
+        <span class="side-val base-state" id="base-state">🦅</span>
+      </aside>
+    </main>
+
+    <!-- 触控按钮(触屏设备显示) -->
+    <section class="touch-controls" id="touch-controls">
+      <div class="dpad">
+        <button class="tc-btn tc-up" id="tc-up" aria-label="上">▲</button>
+        <button class="tc-btn tc-left" id="tc-left" aria-label="左">◀</button>
+        <button class="tc-btn tc-right" id="tc-right" aria-label="右">▶</button>
+        <button class="tc-btn tc-down" id="tc-down" aria-label="下">▼</button>
+        <span class="dpad-center" aria-hidden="true"></span>
+      </div>
+      <button class="tc-btn tc-fire" id="tc-fire" aria-label="开火">FIRE</button>
+    </section>
+
+    <footer class="foot-tip">1P:W A S D 移动 · 空格 开火 &nbsp;|&nbsp; 2P:方向键 移动 · 回车 开火 &nbsp;|&nbsp; P 暂停</footer>
+  </div>
+
+  <!-- 结果浮层 -->
+  <div class="modal" id="result-modal" hidden>
+    <div class="modal-card">
+      <p class="result-emoji" id="result-emoji">🎮</p>
+      <h2 class="result-title" id="result-title">游戏结束</h2>
+      <p class="result-record" id="result-record" hidden>🏆 新纪录!</p>
+      <div class="result-stats" id="result-stats">
+        <div class="result-stat">
+          <span class="result-stat-label">1P 得分</span>
+          <span class="result-stat-value" id="result-p1">0</span>
+        </div>
+        <div class="result-stat" id="result-p2-stat">
+          <span class="result-stat-label">2P 得分</span>
+          <span class="result-stat-value" id="result-p2">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">到达关卡</span>
+          <span class="result-stat-value" id="result-stage">1</span>
+        </div>
+      </div>
+      <p class="result-sub">用时 <b id="result-duration">0:00</b> · 历史最佳 <b id="result-best">0</b></p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-retry">再来一局</button>
+        <a class="btn btn-ghost" href="../../index.html">返回大厅</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录抽屉 -->
+  <div class="drawer-mask" id="drawer-mask" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="历史记录">
+    <header class="drawer-header">
+      <h2>历史记录</h2>
+      <button class="icon-btn" id="btn-close-drawer" aria-label="关闭">✕</button>
+    </header>
+
+    <section class="drawer-section">
+      <h3>历史最佳</h3>
+      <div class="best-summary">
+        <div class="result-stat">
+          <span class="result-stat-label">最高分</span>
+          <span class="result-stat-value" id="drawer-best-score">--</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">到达关卡</span>
+          <span class="result-stat-value" id="drawer-best-level">--</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="drawer-section">
+      <h3>最近对局</h3>
+      <ul class="record-list" id="record-list"></ul>
+      <button class="btn btn-danger-ghost" id="btn-clear">清空全部记录</button>
+    </section>
+  </aside>
+</body>
+</html>
