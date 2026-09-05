@@ -79,6 +79,7 @@ Page({
     pauseIcon: '⏸',
     // 结果浮层
     resultVisible: false,
+    resultTitle: '游戏结束',
     resultEmoji: '🎮',
     isNewRecord: false,
     resultScore: '0',
@@ -346,7 +347,8 @@ Page({
     }
 
     // 幽灵投影与当前方块(pieceCells 返回绝对坐标,幽灵再加相对偏移 gy-current.y)
-    if (s.current && !s.over && this.phase !== 'idle') {
+    // 结束后不画当前块,避免主动结束时残块浮在终局画面上
+    if (s.current && !s.over && (this.phase === 'running' || this.phase === 'paused')) {
       const gy = this.engine.ghostY();
       const cells = this.engine.pieceCells();
       if (gy !== s.current.y) {
@@ -457,13 +459,14 @@ Page({
     }
   },
 
-  gameOver() {
+  /* endedBy:'over' 堆到顶自动结束 | 'quit' 暂停界面主动结束 */
+  gameOver(endedBy = 'over') {
     this.phase = 'over';
     const s = this.engine.state;
     const duration = Math.round((Date.now() - this.startTs - this.pausedAcc) / 1000);
     const date = new Date().toISOString();
 
-    this.records.unshift({ score: s.score, lines: s.lines, level: s.level, duration, date });
+    this.records.unshift({ score: s.score, lines: s.lines, level: s.level, duration, date, end: endedBy });
     this.records = this.records.slice(0, MAX_RECORDS);
     storageSet(KEY_RECORDS, this.records);
 
@@ -478,7 +481,8 @@ Page({
     this.updateHUD();
     this.setData({
       resultVisible: true,
-      resultEmoji: isNewRecord ? '🏆' : s.lines >= 20 ? '🎉' : '🎮',
+      resultTitle: endedBy === 'quit' ? '本局已结束' : '游戏结束',
+      resultEmoji: isNewRecord ? '🏆' : endedBy === 'quit' ? '🏁' : s.lines >= 20 ? '🎉' : '🎮',
       isNewRecord,
       resultScore: fmtScore(s.score),
       resultLines: s.lines,
@@ -486,7 +490,14 @@ Page({
       resultDuration: fmtDur(duration),
       resultBest: this.best ? fmtScore(this.best.score) : '0',
       pauseIcon: '⏸',
+      pauseVisible: false,
     });
+  },
+
+  /* 主动结束本局(进行中或已暂停均可) */
+  onFinishTap() {
+    if (this.phase !== 'running' && this.phase !== 'paused') return;
+    this.gameOver('quit');
   },
 
   /* ---------- 事件:顶栏 ---------- */
@@ -548,7 +559,7 @@ Page({
       records: this.records.slice(0, 50).map((r, i) => ({
         key: i,
         scoreText: fmtScore(r.score),
-        metaText: `${r.lines} 行 · Lv${r.level} · ${fmtDur(r.duration)} · ${fmtDate(r.date)}`,
+        metaText: `${r.lines} 行 · Lv${r.level} · ${fmtDur(r.duration)}${r.end === 'quit' ? ' · 主动结束' : ''} · ${fmtDate(r.date)}`,
       })),
     });
   },

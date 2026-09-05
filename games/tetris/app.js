@@ -226,7 +226,8 @@ function draw() {
   }
 
   // 幽灵投影与当前方块(pieceCells 返回绝对坐标,幽灵再加相对偏移 gy-current.y)
-  if (s.current && !s.over && phase !== 'idle') {
+  // 结束后不画当前块,避免主动结束时残块浮在终局画面上
+  if (s.current && !s.over && (phase === 'running' || phase === 'paused')) {
     const gy = engine.ghostY();
     const cells = engine.pieceCells();
     if (gy !== s.current.y) {
@@ -397,13 +398,14 @@ function togglePause() {
   }
 }
 
-function gameOver() {
+/* endedBy:'over' 堆到顶自动结束 | 'quit' 暂停界面主动结束 */
+function gameOver(endedBy = 'over') {
   phase = 'over';
   const s = engine.state;
   const duration = Math.round((performance.now() - startTs - pausedAcc) / 1000);
   const date = new Date().toISOString();
 
-  records.unshift({ score: s.score, lines: s.lines, level: s.level, duration, date });
+  records.unshift({ score: s.score, lines: s.lines, level: s.level, duration, date, end: endedBy });
   records = records.slice(0, MAX_RECORDS);
   saveJSON(KEY_RECORDS, records);
 
@@ -414,7 +416,8 @@ function gameOver() {
   }
 
   sfx.gameover();
-  $('result-emoji').textContent = isNewRecord ? '🏆' : s.lines >= 20 ? '🎉' : '🎮';
+  $('result-emoji').textContent = isNewRecord ? '🏆' : endedBy === 'quit' ? '🏁' : s.lines >= 20 ? '🎉' : '🎮';
+  $('result-title').textContent = endedBy === 'quit' ? '本局已结束' : '游戏结束';
   $('result-record').hidden = !isNewRecord;
   $('result-score').textContent = fmtScore(s.score);
   $('result-lines').textContent = s.lines;
@@ -422,7 +425,14 @@ function gameOver() {
   $('result-duration').textContent = fmtDur(duration);
   $('result-best').textContent = best ? fmtScore(best.score) : '0';
   resultModal.hidden = false;
+  pauseOverlay.hidden = true;
   $('btn-pause').textContent = '⏸';
+}
+
+/* 主动结束本局(进行中或已暂停均可) */
+function finishGame() {
+  if (phase !== 'running' && phase !== 'paused') return;
+  gameOver('quit');
 }
 
 /* ---------- 历史抽屉 ---------- */
@@ -441,7 +451,7 @@ function renderDrawer() {
     const li = document.createElement('li');
     li.className = 'record-item';
     li.innerHTML = `<span class="rec-score">${fmtScore(r.score)} 分</span>
-      <span class="rec-meta">${r.lines} 行 · Lv${r.level} · ${fmtDur(r.duration)}<br>${fmtDate(r.date)}</span>`;
+      <span class="rec-meta">${r.lines} 行 · Lv${r.level} · ${fmtDur(r.duration)}${r.end === 'quit' ? ' · 主动结束' : ''}<br>${fmtDate(r.date)}</span>`;
     list.appendChild(li);
   }
 }
@@ -588,6 +598,7 @@ $('lv-up').addEventListener('click', () => changeLevel(1));
 $('btn-start').addEventListener('click', startGame);
 $('btn-retry').addEventListener('click', startGame);
 $('btn-resume').addEventListener('click', togglePause);
+$('btn-finish').addEventListener('click', finishGame);
 $('btn-pause').addEventListener('click', () => {
   if (phase === 'idle') startGame();
   else togglePause();

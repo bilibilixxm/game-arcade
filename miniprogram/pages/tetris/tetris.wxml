@@ -55,6 +55,7 @@
         <view class="start-card">
           <view class="start-title">已暂停</view>
           <button class="btn btn-primary" bindtap="onResumeTap">继续</button>
+          <button class="btn btn-ghost" bindtap="onFinishTap">结束本局</button>
         </view>
       </view>
     </view>
@@ -103,7 +104,7 @@
   <view class="modal" wx:if="{{resultVisible}}" catchtouchmove="noop">
     <view class="modal-card">
       <view class="result-emoji">{{resultEmoji}}</view>
-      <view class="result-title">游戏结束</view>
+      <view class="result-title">{{resultTitle}}</view>
       <view class="result-record" wx:if="{{isNewRecord}}">🏆 新纪录!</view>
       <view class="result-stats">
         <view class="result-stat">
