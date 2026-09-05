@@ -1,6 +1,7 @@
 /* ==========================================================
    PWA 图标生成器 — 纯 Node 实现,零依赖(node tools/gen-icons.js)
-   设计:蓝紫渐变背景 + 3×3 白色圆角方块,中心一块琥珀色
+   设计:蓝紫渐变背景 + 马赛克瓷砖拼贴的游戏手柄
+        (白色机身、深色十字键与功能键、红蓝黄绿四色按钮)
    产物:icons/icon-180.png(apple-touch-icon)/ 192 / 512
    ========================================================== */
 'use strict';
@@ -57,7 +58,7 @@ function encodePNG(width, height, rgb /* Uint8Array, 3 bytes/px */) {
   ]);
 }
 
-/* ---------- 绘制 ---------- */
+/* ---------- 绘制:马赛克游戏手柄 ---------- */
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // 点是否在圆角矩形内(x,y 为像素中心坐标系)
@@ -68,33 +69,50 @@ function inRoundRect(px, py, x, y, w, h, r) {
   return (px - cx) ** 2 + (py - cy) ** 2 <= r * r;
 }
 
+/* 像素画定义:22×13 网格,横向手柄
+   机身每行的 [起列, 止列](圆角胶囊轮廓) */
+const GRID_COLS = 22;
+const BODY_ROWS = [
+  [6, 15],
+  [3, 18],
+  [2, 19],
+  [1, 20], [1, 20], [1, 20], [1, 20], [1, 20], [1, 20], [1, 20],
+  [2, 19],
+  [3, 18],
+  [6, 15],
+];
+
+/* 叠加瓷砖("列,行": 字符)
+   D 十字键 · S 开始/选择键 · R/B/Y/G 四色按钮(上红 左蓝 右黄 下绿) */
+const OVERLAYS = {
+  '6,4': 'D', '6,5': 'D', '6,6': 'D', '6,7': 'D', '6,8': 'D',
+  '4,6': 'D', '5,6': 'D', '7,6': 'D', '8,6': 'D',
+  '10,6': 'S', '11,6': 'S',
+  '16,4': 'R', '15,5': 'B', '17,5': 'Y', '16,6': 'G',
+};
+
+const TILE_COLORS = {
+  W: [255, 255, 255], // 机身
+  D: [42, 50, 71], // 十字键/功能键
+  S: [42, 50, 71],
+  R: [229, 72, 77],
+  B: [65, 199, 240],
+  Y: [255, 176, 32],
+  G: [62, 207, 142],
+};
+
 function drawIcon(S) {
   const img = new Uint8Array(S * S * 3);
-  // 渐变端色:靛蓝 → 紫
+  // 渐变端色:靛蓝 → 紫(与合集 UI 主题一致)
   const c1 = [79, 110, 247];
   const c2 = [139, 92, 246];
-  // 棋盘参数(相对尺寸)
-  const board = S * 0.64; // 3×3 棋盘总宽
-  const gap = S * 0.035;
-  const cell = (board - 2 * gap) / 3;
-  const cellR = cell * 0.22;
-  const bx = (S - board) / 2;
-  const by = (S - board) / 2;
+  // 马赛克参数:手柄主体占宽 86%,瓷砖间留缝露背景
+  const cell = (S * 0.86) / GRID_COLS;
+  const gap = cell * 0.11;
+  const tileR = (cell - gap) * 0.18; // 瓷砖微圆角
+  const bx = (S - GRID_COLS * cell) / 2;
+  const by = (S - BODY_ROWS.length * cell) / 2;
   const SS = 3; // 3×3 超采样抗锯齿
-  const white = [255, 255, 255];
-  const amber = [255, 176, 32];
-
-  // 预生成 9 个圆角矩形
-  const rects = [];
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
-      rects.push({
-        x: bx + c * (cell + gap),
-        y: by + r * (cell + gap),
-        color: r === 1 && c === 1 ? amber : white,
-      });
-    }
-  }
 
   for (let y = 0; y < S; y++) {
     for (let x = 0; x < S; x++) {
@@ -104,10 +122,17 @@ function drawIcon(S) {
           const px = x + (sx + 0.5) / SS;
           const py = y + (sy + 0.5) / SS;
           let col = null;
-          for (const rc of rects) {
-            if (inRoundRect(px, py, rc.x, rc.y, cell, cell, cellR)) {
-              col = rc.color;
-              break;
+          // 只检查采样点所在行的瓷砖(按行分桶,避免 O(S²×全部瓷砖))
+          const row = Math.floor((py - by) / cell);
+          if (row >= 0 && row < BODY_ROWS.length) {
+            const [a, b] = BODY_ROWS[row];
+            for (let tx = a; tx <= b; tx++) {
+              const rx = bx + tx * cell;
+              const ry = by + row * cell;
+              if (inRoundRect(px, py, rx + gap / 2, ry + gap / 2, cell - gap, cell - gap, tileR)) {
+                col = TILE_COLORS[OVERLAYS[`${tx},${row}`] || 'W'];
+                break;
+              }
             }
           }
           if (!col) {

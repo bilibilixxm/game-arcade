@@ -5,7 +5,7 @@
    ========================================================== */
 'use strict';
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const PRECACHE = [
   './',
   './index.html',
