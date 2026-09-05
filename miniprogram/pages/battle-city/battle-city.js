@@ -12,7 +12,7 @@ const BattleCitySprites = require('../../libs/battle-city-sprites.js');
 
 const KEY_RECORDS = 'battle-city.records';
 const KEY_BEST = 'battle-city.best';
-const KEY_SETTINGS = 'battle-city.settings'; // 本游戏设置(sound)
+const KEY_SETTINGS = 'battle-city.settings'; // 本游戏设置(sound/startStage/wholeBrick)
 const KEY_APP_SETTINGS = 'arcade.settings'; // 应用级设置(theme,合集共用)
 const MAX_RECORDS = 50;
 
@@ -67,7 +67,11 @@ Page({
     baseAlive: true,
     overlayVisible: true,
     pauseVisible: false,
-    pressed: { up: false, down: false, left: false, right: false, fire: false },
+    pressed: { fire: false },
+    startStage: 1,
+    brickWhole: false,
+    stickX: 0,
+    stickY: 0,
     darkClass: '',
     themeIcon: '🌓',
     pauseIcon: '⏸',
@@ -102,12 +106,17 @@ Page({
     wx.onThemeChange(this.onThemeChangeHandler);
     this.applyTheme();
 
-    this.settings = Object.assign({ sound: true }, storageGet(KEY_SETTINGS, {}));
+    this.settings = Object.assign({ sound: true, startStage: 1, wholeBrick: false }, storageGet(KEY_SETTINGS, {}));
+    this.setData({
+      startStage: Math.max(1, Math.min(35, this.settings.startStage || 1)),
+      brickWhole: !!this.settings.wholeBrick,
+    });
     this.records = storageGet(KEY_RECORDS, []);
     this.best = storageGet(KEY_BEST, null);
 
     this.engine = BattleCityEngine.createBattleCity({ levels: BattleCityLevels });
     this.initSpriteKeys();
+    this.engine.RULES.wholeBrick = !!this.settings.wholeBrick;
     this.phase = 'idle'; // idle | running | paused | over
     this.startTs = 0;
     this.pausedAcc = 0;
@@ -146,7 +155,9 @@ Page({
     const query = wx.createSelectorQuery().in(this);
     query.select('#board').fields({ node: true, size: true });
     query.select('#cv-enemy').fields({ node: true, size: true });
+    query.select('.joy').boundingClientRect();
     query.exec((res) => {
+      this.joyRect = res[2]; // 摇杆基座几何(触点坐标基准)
       let dpr = 2;
       try {
         dpr = wx.getWindowInfo().pixelRatio || 2;
@@ -488,7 +499,7 @@ Page({
 
   /* ---------- 游戏流程 ---------- */
   startGame() {
-    this.engine.reset({ stage: 1, players: 1 });
+    this.engine.reset({ stage: this.settings.startStage || 1, players: 1 });
     this.input = { dirs: [], fire: false };
     this.fx = [];
     this.phase = 'running';
@@ -570,31 +581,91 @@ Page({
     else this.togglePause();
   },
 
-  /* ---------- 事件:触控方向盘 + FIRE ---------- */
-  onBtnDown(e) {
-    const act = e.currentTarget.dataset.act;
-    if (act === 'fire') {
-      this.setData({ 'pressed.fire': true });
-      this.input.fire = true;
-      return;
-    }
-    const dir = { up: 'up', down: 'down', left: 'left', right: 'right' }[act];
-    if (!dir) return;
-    this.setData({ [`pressed.${act}`]: true });
-    this.pressDir(dir);
+  /* ---------- 事件:起始关卡与砖块模式 ---------- */
+  onStageDown() {
+    this.changeStage(-1);
   },
 
-  onBtnUp(e) {
-    const act = e.currentTarget.dataset.act;
-    if (act === 'fire') {
-      this.setData({ 'pressed.fire': false });
-      this.input.fire = false;
-      return;
+  onStageUp() {
+    this.changeStage(1);
+  },
+
+  changeStage(d) {
+    const cur = this.settings.startStage || 1;
+    const next = Math.max(1, Math.min(35, cur + d));
+    if (next === cur) return;
+    this.settings.startStage = next;
+    storageSet(KEY_SETTINGS, this.settings);
+    this.setData({ startStage: next });
+  },
+
+  onBrickTap() {
+    this.settings.wholeBrick = !this.settings.wholeBrick;
+    storageSet(KEY_SETTINGS, this.settings);
+    this.engine.RULES.wholeBrick = !!this.settings.wholeBrick;
+    this.setData({ brickWhole: !!this.settings.wholeBrick });
+  },
+
+  /* ---------- 事件:触控摇杆 + FIRE ---------- */
+  /* 摇杆:按住拖动即转向,不抬手也能顺滑切换方向(死区 25% 半径,主轴取分量大者) */
+  onJoyStart(e) {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    this.joyActive = true;
+    this.joyUpdate(t.clientX, t.clientY);
+  },
+
+  onJoyMove(e) {
+    if (!this.joyActive) return;
+    const t = e.touches && e.touches[0];
+    if (t) this.joyUpdate(t.clientX, t.clientY);
+  },
+
+  onJoyEnd() {
+    if (!this.joyActive) return;
+    this.joyActive = false;
+    if (this.joyDir) {
+      this.releaseDir(this.joyDir);
+      this.joyDir = null;
     }
-    const dir = { up: 'up', down: 'down', left: 'left', right: 'right' }[act];
-    if (!dir) return;
-    this.setData({ [`pressed.${act}`]: false });
-    this.releaseDir(dir);
+    this.setData({ stickX: 0, stickY: 0 });
+  },
+
+  joyUpdate(x, y) {
+    const r = this.joyRect;
+    if (!r) return;
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const radius = r.width / 2;
+    const dx = x - cx;
+    const dy = y - cy;
+    const mag = Math.hypot(dx, dy);
+    /* 旋钮视觉偏移:限制在 55% 半径内;变化 ≥1px 才 setData */
+    const k = mag ? Math.min(mag, radius * 0.55) / mag : 0;
+    const kx = Math.round(dx * k);
+    const ky = Math.round(dy * k);
+    if (kx !== this.data.stickX || ky !== this.data.stickY) {
+      this.setData({ stickX: kx, stickY: ky });
+    }
+    let dir = null;
+    if (mag > radius * 0.25) {
+      dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    }
+    if (dir !== this.joyDir) {
+      if (this.joyDir) this.releaseDir(this.joyDir);
+      if (dir) this.pressDir(dir);
+      this.joyDir = dir;
+    }
+  },
+
+  onFireDown() {
+    this.setData({ 'pressed.fire': true });
+    this.input.fire = true;
+  },
+
+  onFireUp() {
+    this.setData({ 'pressed.fire': false });
+    this.input.fire = false;
   },
 
   /* ---------- 事件:结果浮层与历史 ---------- */

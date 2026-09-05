@@ -30,7 +30,10 @@ function saveJSON(key, value) {
 
 let records = loadJSON(KEY_RECORDS, []); // [{ score, level, date, end, player }]
 let best = loadJSON(KEY_BEST, null); // { score, level, date }
-let settings = Object.assign({ sound: true, theme: 'auto', players: 1 }, loadJSON(KEY_SETTINGS, {}));
+let settings = Object.assign(
+  { sound: true, theme: 'auto', players: 1, startStage: 1, wholeBrick: false },
+  loadJSON(KEY_SETTINGS, {})
+);
 
 /* ---------- 引擎与状态 ---------- */
 const engine = BattleCityEngine.createBattleCity({ levels: BattleCityLevels });
@@ -38,6 +41,7 @@ const SPR = BattleCitySprites;
 
 let phase = 'idle'; // idle | running | paused | over
 let mode = settings.players === 2 ? 2 : 1; // 1 | 2(开始界面选择)
+let startStage = Math.max(1, Math.min(35, settings.startStage || 1)); // 起始关卡(开始界面可选)
 let startTs = 0;
 let pausedAcc = 0;
 let pauseTs = 0;
@@ -503,7 +507,7 @@ function loop(now) {
 
 /* ---------- 游戏流程 ---------- */
 function startGame() {
-  engine.reset({ stage: 1, players: mode });
+  engine.reset({ stage: startStage, players: mode });
   input[0].dirs = [];
   input[1].dirs = [];
   input[0].fire = false;
@@ -682,7 +686,57 @@ document.addEventListener('keyup', (e) => {
   else if (e.code === 'Enter') input[1].fire = false;
 });
 
-/* ---------- 事件:触控方向盘 + FIRE(操控 1P) ---------- */
+/* ---------- 事件:触控摇杆 + FIRE(操控 1P) ---------- */
+/* 摇杆:按住拖动即转向,不抬手也能顺滑切换方向(死区 25% 半径,主轴取分量大者) */
+const joy = $('joy');
+const knob = $('joy-knob');
+let joyActive = false;
+let joyDir = null;
+
+function joyUpdate(clientX, clientY) {
+  const rect = joy.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const radius = rect.width / 2;
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+  const mag = Math.hypot(dx, dy);
+  /* 旋钮视觉偏移:限制在 55% 半径内 */
+  const k = mag ? Math.min(mag, radius * 0.55) / mag : 0;
+  knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+  let dir = null;
+  if (mag > radius * 0.25) {
+    dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  }
+  if (dir !== joyDir) {
+    if (joyDir) releaseDir(0, joyDir);
+    if (dir) pressDir(0, dir);
+    joyDir = dir;
+  }
+}
+
+joy.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  joyActive = true;
+  try { joy.setPointerCapture(e.pointerId); } catch { /* 合成事件可能无活动指针 */ }
+  joyUpdate(e.clientX, e.clientY);
+});
+joy.addEventListener('pointermove', (e) => {
+  if (joyActive) joyUpdate(e.clientX, e.clientY);
+});
+function joyEnd() {
+  if (!joyActive) return;
+  joyActive = false;
+  if (joyDir) {
+    releaseDir(0, joyDir);
+    joyDir = null;
+  }
+  knob.style.transform = '';
+}
+joy.addEventListener('pointerup', joyEnd);
+joy.addEventListener('pointercancel', joyEnd);
+joy.addEventListener('contextmenu', (e) => e.preventDefault());
+
 function bindHold(id, onDown, onUp) {
   const el = $(id);
   el.addEventListener('pointerdown', (e) => {
@@ -700,10 +754,6 @@ function bindHold(id, onDown, onUp) {
   el.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
-bindHold('tc-up', () => pressDir(0, 'up'), () => releaseDir(0, 'up'));
-bindHold('tc-down', () => pressDir(0, 'down'), () => releaseDir(0, 'down'));
-bindHold('tc-left', () => pressDir(0, 'left'), () => releaseDir(0, 'left'));
-bindHold('tc-right', () => pressDir(0, 'right'), () => releaseDir(0, 'right'));
 bindHold('tc-fire', () => { input[0].fire = true; }, () => { input[0].fire = false; });
 
 /* ---------- 事件:顶栏与浮层 ---------- */
@@ -725,6 +775,37 @@ $('btn-mode-2p').addEventListener('click', () => {
   settings.players = 2;
   saveJSON(KEY_SETTINGS, settings);
   applyModeUI();
+});
+
+/* 起始关卡选择(1-35,记忆) */
+function applyStageUI() {
+  $('stage-num').textContent = startStage;
+}
+
+$('btn-stage-down').addEventListener('click', () => {
+  startStage = Math.max(1, startStage - 1);
+  settings.startStage = startStage;
+  saveJSON(KEY_SETTINGS, settings);
+  applyStageUI();
+});
+
+$('btn-stage-up').addEventListener('click', () => {
+  startStage = Math.min(35, startStage + 1);
+  settings.startStage = startStage;
+  saveJSON(KEY_SETTINGS, settings);
+  applyStageUI();
+});
+
+/* 砖块破坏方式:经典咬痕(16×8,留掩体)/ 一击整块(16×16,更爽快) */
+function applyBrickUI() {
+  engine.RULES.wholeBrick = !!settings.wholeBrick;
+  $('btn-brick').textContent = settings.wholeBrick ? '砖块:一击整块' : '砖块:经典咬痕';
+}
+
+$('btn-brick').addEventListener('click', () => {
+  settings.wholeBrick = !settings.wholeBrick;
+  saveJSON(KEY_SETTINGS, settings);
+  applyBrickUI();
 });
 
 $('btn-start').addEventListener('click', startGame);
@@ -768,6 +849,8 @@ document.addEventListener('visibilitychange', () => {
 applyTheme();
 applySoundIcon();
 applyModeUI();
+applyStageUI();
+applyBrickUI();
 resize();
 window.addEventListener('resize', resize);
 rafId = requestAnimationFrame(loop);

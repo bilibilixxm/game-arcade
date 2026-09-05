@@ -347,6 +347,40 @@ button {
   transform: scale(0.94);
 }
 
+/* 起始关卡选择 / 砖块选项 */
+.opt-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.opt-label {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.opt-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.opt-num {
+  min-width: 34px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ============ 按钮 ============ */
 .btn {
   padding: 10px 22px;
@@ -386,36 +420,55 @@ button {
   background: var(--danger-weak);
 }
 
-/* ============ 触控(方向盘 + FIRE) ============ */
+/* ============ 触控(摇杆 + FIRE) ============ */
 .touch-controls {
   display: none;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 4px 12px;
+  padding: 4px 24px;
   touch-action: none;
 }
 
-.dpad {
+.joy {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(3, 56px);
-  gap: 2px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.dpad-center {
-  grid-column: 2;
-  grid-row: 2;
-  background: var(--bg-inset);
-  border-radius: 12px;
-  opacity: 0.5;
+/* 中心准星提示 */
+.joy::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--border);
 }
 
-.tc-up    { grid-column: 2; grid-row: 1; }
-.tc-left  { grid-column: 1; grid-row: 2; }
-.tc-right { grid-column: 3; grid-row: 2; }
-.tc-down  { grid-column: 2; grid-row: 3; }
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62px;
+  height: 62px;
+  margin: -31px 0 0 -31px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.92;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
 
 .tc-btn {
   border-radius: 12px;
@@ -687,6 +740,41 @@ button {
   color: var(--text-sub);
 }
 
+/* ============ 窄屏:棋盘独占整行放大,两侧信息条移到棋盘下方 ============ */
+@media (max-width: 560px) {
+  .stage {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .board-wrap {
+    order: -1;
+    width: 100%;
+  }
+
+  .panel {
+    flex: 1 1 40%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
+  }
+
+  .panel-label {
+    letter-spacing: 1px;
+  }
+
+  .preview {
+    width: 84px;
+  }
+
+  .side-box,
+  .base-state {
+    padding: 6px 10px;
+  }
+}
+
 /* ============ 小屏适配 ============ */
 @media (max-width: 400px) {
   .app {
@@ -706,9 +794,15 @@ button {
     width: 100%;
   }
 
-  .dpad {
-    grid-template-columns: repeat(3, 48px);
-    grid-template-rows: repeat(3, 48px);
+  .joy {
+    width: 130px;
+    height: 130px;
+  }
+
+  .joy-knob {
+    width: 56px;
+    height: 56px;
+    margin: -28px 0 0 -28px;
   }
 
   .tc-fire {

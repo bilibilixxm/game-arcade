@@ -27,98 +27,74 @@
     </view>
   </view>
 
-  <!-- 游戏舞台 -->
-  <view class="stage">
+  <!-- 战场(放大,独占整行) -->
+  <view class="board-wrap">
+    <canvas type="2d" id="board" class="board"></canvas>
+    <!-- 开始遮罩 -->
+    <view class="start-overlay" wx:if="{{overlayVisible}}">
+      <view class="start-card">
+        <view class="start-title">保卫基地 · 消灭 20 辆敌军坦克</view>
+        <view class="level-pick">
+          <text class="level-label">起始关卡</text>
+          <view class="level-btn" bindtap="onStageDown" hover-class="level-btn-hover">−</view>
+          <text class="level-num">{{startStage}}</text>
+          <view class="level-btn" bindtap="onStageUp" hover-class="level-btn-hover">＋</view>
+        </view>
+        <view class="brick-toggle" bindtap="onBrickTap">砖块:{{brickWhole ? '一击整块' : '经典咬痕'}}</view>
+        <view class="start-hint">基地被毁或生命耗尽即失败 · 击毁闪红敌坦可获道具</view>
+        <button class="btn btn-primary" bindtap="onStartTap">开始游戏</button>
+      </view>
+    </view>
+    <!-- 暂停遮罩 -->
+    <view class="start-overlay" wx:if="{{pauseVisible}}">
+      <view class="start-card">
+        <view class="start-title">已暂停</view>
+        <button class="btn btn-primary" bindtap="onResumeTap">继续</button>
+        <button class="btn btn-ghost" bindtap="onFinishTap">结束本局</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 信息条:敌军 / 基地 / 生命 / 火力 -->
+  <view class="info-row">
     <view class="panel">
       <text class="panel-label">敌军</text>
       <canvas type="2d" id="cv-enemy" class="preview enemy-preview"></canvas>
-      <view class="side-box">
-        <text class="side-label">基地</text>
-        <view class="base-state {{baseAlive ? '' : 'destroyed'}}">{{baseAlive ? '🦅' : '💥'}}</view>
-      </view>
     </view>
-
-    <view class="board-wrap">
-      <canvas type="2d" id="board" class="board"></canvas>
-      <!-- 开始遮罩 -->
-      <view class="start-overlay" wx:if="{{overlayVisible}}">
-        <view class="start-card">
-          <view class="start-title">保卫基地 · 消灭 20 辆敌军坦克</view>
-          <view class="start-hint">基地被毁或生命耗尽即失败 · 击毁闪红敌坦可获道具</view>
-          <button class="btn btn-primary" bindtap="onStartTap">开始游戏</button>
-        </view>
-      </view>
-      <!-- 暂停遮罩 -->
-      <view class="start-overlay" wx:if="{{pauseVisible}}">
-        <view class="start-card">
-          <view class="start-title">已暂停</view>
-          <button class="btn btn-primary" bindtap="onResumeTap">继续</button>
-          <button class="btn btn-ghost" bindtap="onFinishTap">结束本局</button>
-        </view>
-      </view>
+    <view class="side-box">
+      <text class="side-label">基地</text>
+      <view class="base-state {{baseAlive ? '' : 'destroyed'}}">{{baseAlive ? '🦅' : '💥'}}</view>
     </view>
-
-    <view class="panel">
-      <text class="panel-label">玩家</text>
-      <view class="side-box">
-        <text class="side-label">生命</text>
-        <view class="side-value">{{livesText}}</view>
-      </view>
-      <view class="side-box">
-        <text class="side-label">火力</text>
-        <view class="side-value">{{powerText}}</view>
-      </view>
+    <view class="side-box">
+      <text class="side-label">生命</text>
+      <view class="side-value">{{livesText}}</view>
+    </view>
+    <view class="side-box">
+      <text class="side-label">火力</text>
+      <view class="side-value">{{powerText}}</view>
     </view>
   </view>
 
-  <!-- 触控:方向盘 + FIRE -->
+  <!-- 触控:摇杆 + FIRE -->
   <view class="touch-controls">
-    <view class="dpad">
-      <view class="dpad-row">
-        <view
-          class="dpad-cell {{pressed.up ? 'pressing' : ''}}"
-          data-act="up"
-          bindtouchstart="onBtnDown"
-          bindtouchend="onBtnUp"
-          bindtouchcancel="onBtnUp"
-        >↑</view>
-      </view>
-      <view class="dpad-row">
-        <view
-          class="dpad-cell {{pressed.left ? 'pressing' : ''}}"
-          data-act="left"
-          bindtouchstart="onBtnDown"
-          bindtouchend="onBtnUp"
-          bindtouchcancel="onBtnUp"
-        >←</view>
-        <view
-          class="dpad-cell {{pressed.right ? 'pressing' : ''}}"
-          data-act="right"
-          bindtouchstart="onBtnDown"
-          bindtouchend="onBtnUp"
-          bindtouchcancel="onBtnUp"
-        >→</view>
-      </view>
-      <view class="dpad-row">
-        <view
-          class="dpad-cell {{pressed.down ? 'pressing' : ''}}"
-          data-act="down"
-          bindtouchstart="onBtnDown"
-          bindtouchend="onBtnUp"
-          bindtouchcancel="onBtnUp"
-        >↓</view>
-      </view>
+    <view
+      class="joy"
+      bindtouchstart="onJoyStart"
+      catchtouchmove="onJoyMove"
+      bindtouchend="onJoyEnd"
+      bindtouchcancel="onJoyEnd"
+    >
+      <view class="joy-knob" style="transform: translate({{stickX}}px, {{stickY}}px);"></view>
     </view>
     <view
       class="tc-fire {{pressed.fire ? 'pressing' : ''}}"
-      data-act="fire"
-      bindtouchstart="onBtnDown"
-      bindtouchend="onBtnUp"
-      bindtouchcancel="onBtnUp"
+      bindtouchstart="onFireDown"
+      bindtouchend="onFireUp"
+      bindtouchcancel="onFireUp"
     >FIRE</view>
   </view>
 
-  <view class="foot-tip">方向盘移动 · FIRE 开火 · 保卫你的基地 🦅</view>
+  <view class="foot-tip">摇杆移动 · FIRE 开火 · 保卫你的基地 🦅</view>
 
   <!-- 结果浮层 -->
   <view class="modal" wx:if="{{resultVisible}}" catchtouchmove="noop">

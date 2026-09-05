@@ -80,6 +80,13 @@
               <button class="mode-btn active" id="btn-mode-1p">单人</button>
               <button class="mode-btn" id="btn-mode-2p">双人</button>
             </div>
+            <div class="opt-row" role="group" aria-label="起始关卡">
+              <span class="opt-label">起始关卡</span>
+              <button class="opt-btn" id="btn-stage-down" aria-label="上一关">−</button>
+              <span class="opt-num" id="stage-num">1</span>
+              <button class="opt-btn" id="btn-stage-up" aria-label="下一关">＋</button>
+            </div>
+            <button class="mode-btn" id="btn-brick" title="切换砖块破坏方式">砖块:经典咬痕</button>
             <p class="start-hint" id="start-hint">1P:WASD 移动 · 空格开火<br>2P:方向键移动 · 回车开火</p>
             <button class="btn btn-primary" id="btn-start">开始游戏</button>
           </div>
@@ -102,14 +109,10 @@
       </aside>
     </main>
 
-    <!-- 触控按钮(触屏设备显示) -->
+    <!-- 触控摇杆 + FIRE(触屏设备显示) -->
     <section class="touch-controls" id="touch-controls">
-      <div class="dpad">
-        <button class="tc-btn tc-up" id="tc-up" aria-label="上">▲</button>
-        <button class="tc-btn tc-left" id="tc-left" aria-label="左">◀</button>
-        <button class="tc-btn tc-right" id="tc-right" aria-label="右">▶</button>
-        <button class="tc-btn tc-down" id="tc-down" aria-label="下">▼</button>
-        <span class="dpad-center" aria-hidden="true"></span>
+      <div class="joy" id="joy" aria-label="方向摇杆">
+        <span class="joy-knob" id="joy-knob"></span>
       </div>
       <button class="tc-btn tc-fire" id="tc-fire" aria-label="开火">FIRE</button>
     </section>

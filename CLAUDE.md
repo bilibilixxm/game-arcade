@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # 引擎单测(纯 Node,无测试框架,直接跑)
 node tools/tetris-engine.test.js      # 39 项断言
-node tools/battle-city-engine.test.js # 62 项断言
+node tools/battle-city-engine.test.js # 65 项断言
 
 # 重新生成资产(纯 Node 零依赖)
 node tools/gen-icons.js     # icons/icon-{180,192,512}.png(马赛克手柄像素画)
@@ -21,7 +21,7 @@ node tools/gen-sounds.js    # miniprogram/assets/sounds/{schulte,tetris,battle-c
 python3 -m http.server 8917
 ```
 
-**Playwright UI 测试**(schulte 35 项 / lobby 7 项 / tetris 36 项 / battle-city 39 项 / PWA 17 项)不进仓库,放在 `/tmp/schulte-test/`(test.js、lobby-test.js、tetris-test.js、battle-city-test.js、pwa-test.js),用 `playwright-core` 指向本机 chrome-headless-shell:
+**Playwright UI 测试**(schulte 35 项 / lobby 7 项 / tetris 36 项 / battle-city 47 项 / PWA 17 项)不进仓库,放在 `/tmp/schulte-test/`(test.js、lobby-test.js、tetris-test.js、battle-city-test.js、pwa-test.js),用 `playwright-core` 指向本机 chrome-headless-shell:
 
 若 `/tmp/schulte-test/` 已被清理,需按上述断言数量重写测试脚本(它们覆盖:PWA 预缓存计数、离线可玩、iOS 安装提示三态、tetris 键盘+触控流、canvas 渲染位置像素断言、大厅与子页 localStorage 联动)。
 
@@ -46,6 +46,9 @@ battle-city 注意点:
 - 静态地形预渲染两层离屏(普通层 + 树置顶层),水帧翻转(400ms)时才重建;**杜绝逐像素 fillRect 进主循环**(小程序性能关键)
 - 1P 出生点 (64,192) 右侧紧贴基地护墙大格 (5,12),开局向右被挡是**原版行为**(测试勿当 bug)
 - 直线移动是连续坐标,只有**转向时垂直轴才吸附 8px**;引擎 fire 是上升沿单发(`keyboard.press` 同帧 down+up 触发不了)
+- `engine.RULES` 是 createBattleCity 时合并后的**活对象**:`reset()` 不会重建它,运行时改 `engine.RULES.wholeBrick`(一击整块砖)立即生效——两平台的"砖块模式"开关都靠这个实现,设置存 `battle-city.settings`(startStage/wholeBrick)
+- 起始关卡走引擎现成的 `reset({ stage: N })`,过关后自然 N+1;选关 UI 钳位 1..35
+- 手机触控是**摇杆**(Web pointer events + setPointerCapture;小程序 bindtouchstart/move/end,`joyRect` 由 onReady 时 `.joy` boundingClientRect 提供):死区 25% 半径、主轴取分量大者,**不抬手即可换向**(旧 dpad 已删,测试勿再找 #tc-up)
 - 事件队列 `drainEvents()` 驱动音效/特效(引擎无回调)
 
 ### 每游戏独立目录 + 三层共享件

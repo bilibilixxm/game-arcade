@@ -181,6 +181,22 @@ const P = (e, i = 0) => e.state.players[i];
   check('满级(power=4)弹一次咬 16×16 整格(两排砖)', bottomHalf && topHalf);
 }
 {
+  /* 整块模式(overrides 开启):低火力一击毁掉弹着点所在整块 16×16 砖,不波及邻格 */
+  const e = fresh({ overrides: { RULES: { wholeBrick: true } } }); const clk = mkClock();
+  check('整块模式默认关闭(经典咬痕)', fresh().RULES.wholeBrick === false);
+  play(e, clk, 1200); wipe(e);
+  for (let sy = 8; sy <= 11; sy++) for (let sx = 8; sx <= 11; sx++) e.state.terrain[sy][sx] = 'B';
+  e.state.terrain[10][12] = 'B'; e.state.terrain[11][12] = 'B'; // 右邻大格,验证不波及
+  P(e).x = 64; P(e).y = 112; P(e).dir = 0; P(e).power = 1;
+  e.setInput(0, { dir: null, fire: true });
+  play(e, clk, 400);
+  const wholeGone = [10, 11].every((sy) => [8, 9].every((sx) => e.subAt(sx, sy) === null));
+  const neighborSafe = e.subAt(12, 10) === 'B' && e.subAt(12, 11) === 'B'
+    && [8, 9].every((sy) => [8, 9, 10, 11].every((sx) => e.subAt(sx, sy) === 'B'));
+  check('整块模式:低火力一击毁整块 16×16(命中大格 (4,5))', wholeGone);
+  check('整块模式:上半块与右邻格完整', neighborSafe);
+}
+{
   const e = fresh(); const clk = mkClock();
   play(e, clk, 1200); wipe(e);
   for (let oy = 0; oy < 2; oy++) for (let ox = 0; ox < 2; ox++) e.state.terrain[10 + oy][8 + ox] = 'S';

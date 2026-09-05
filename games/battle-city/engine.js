@@ -59,6 +59,7 @@
     startLives: 3,
     maxPlayerPower: 4,
     pushAllowed: true,       // 坦克贴推开关
+    wholeBrick: false,       // 一击整块:命中即毁整块 16×16 砖(默认关=经典 16×8 咬痕)
   };
 
   /* ---------- 敌型参数 ---------- */
@@ -248,13 +249,15 @@
     /* 弹命中点(x,y 为弹中心)对砖/钢咬一口 */
     function chewTerrain(bullet) {
       const vertical = bullet.dir === 0 || bullet.dir === 2; // 纵向飞
-      const across = bullet.power >= 4 ? TILE : SUBTILE;     // 横向 8px,满级 16px
+      const across = (bullet.power >= 4 || RULE.wholeBrick) ? TILE : SUBTILE; // 横向 8px,满级/整块模式 16px
       /* 命中检测以弹中心所在子格为准 → 咬痕从该子格向墙体内延伸 16px(恰 2 个子格) */
       const hitCol = Math.floor((bullet.x + 2) / SUBTILE);
       const hitRow = Math.floor((bullet.y + 2) / SUBTILE);
-      /* 横向带:普通弹 = 弹中心所在 8px 半格;满级 = 中心 ±8(整 16px) */
+      /* 横向带:满级 = 中心 ±8(整 16px);整块模式 = 吸附到弹着点所在 16px 大格;经典 = 弹中心所在 8px 半格 */
       const pc = vertical ? bullet.x + 2 : bullet.y + 2;
-      const bandStart = bullet.power >= 4 ? pc - SUBTILE : Math.floor(pc / SUBTILE) * SUBTILE;
+      const bandStart = bullet.power >= 4 ? pc - SUBTILE
+        : RULE.wholeBrick ? Math.floor(pc / TILE) * TILE
+        : Math.floor(pc / SUBTILE) * SUBTILE;
       const x0 = vertical ? bandStart
         : bullet.dir === 1 ? hitCol * SUBTILE : hitCol * SUBTILE - SUBTILE;
       const x1 = x0 + (vertical ? across : TILE);
