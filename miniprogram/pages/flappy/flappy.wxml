@@ -1,0 +1,113 @@
+<view class="page {{darkClass}}">
+
+  <!-- 顶部操作栏(标题由小程序导航栏提供) -->
+  <view class="topbar">
+    <view class="icon-btn" bindtap="onThemeTap" aria-label="切换主题">{{themeIcon}}</view>
+    <view class="icon-btn" bindtap="onSoundTap" aria-label="音效开关">{{soundIcon}}</view>
+    <view class="icon-btn" bindtap="onHistoryTap" aria-label="历史记录">📊</view>
+  </view>
+
+  <!-- 状态栏 -->
+  <view class="status-bar">
+    <view class="stat">
+      <text class="stat-label">最高分</text>
+      <text class="stat-value">{{statBest}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">上次得分</text>
+      <text class="stat-value">{{statLast}}</text>
+    </view>
+    <view class="stat">
+      <text class="stat-label">总场次</text>
+      <text class="stat-value">{{statGames}}</text>
+    </view>
+  </view>
+
+  <!-- 游戏舞台(竖屏画布,全屏点按扇翅) -->
+  <view class="stage">
+    <view class="board-wrap">
+      <canvas type="2d" id="board" class="board" bindtouchstart="onTap"></canvas>
+      <!-- 点击起飞提示(ready 态) -->
+      <view class="tap-hint" wx:if="{{tapHintVisible}}">
+        <view class="tap-hand">👆</view>
+        <view>点按屏幕 扇翅起飞</view>
+      </view>
+      <!-- 开始遮罩 -->
+      <view class="start-overlay" wx:if="{{overlayVisible}}">
+        <view class="start-card">
+          <view class="start-title">点按扇翅 · 穿过管道缝隙</view>
+          <view class="start-hint">
+            <view>每过一根管道 +1 分</view>
+            <view>10 / 20 / 30 / 40 分解锁 铜 · 银 · 金 · 白金 奖牌</view>
+            <view>撞上管道或落地即结束</view>
+          </view>
+          <button class="btn btn-primary" bindtap="onStartTap">开始游戏</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="foot-tip">点按屏幕扇翅 · 翅膀不能停 ✌️</view>
+
+  <!-- 结果浮层 -->
+  <view class="modal" wx:if="{{resultVisible}}" catchtouchmove="noop">
+    <view class="modal-card">
+      <view class="result-emoji">{{resultEmoji}}</view>
+      <view class="result-title">{{resultTitle}}</view>
+      <view class="result-medal" wx:if="{{medalIcon}}">
+        <text class="medal-icon">{{medalIcon}}</text>
+        <text>{{medalName}}</text>
+      </view>
+      <view class="result-record" wx:if="{{isNewRecord}}">🏆 新纪录!</view>
+      <view class="result-stats">
+        <view class="result-stat">
+          <text class="result-stat-label">本次得分</text>
+          <text class="result-stat-value">{{resultScore}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">历史最佳</text>
+          <text class="result-stat-value">{{resultBest}}</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn btn-primary" bindtap="onRetryTap">再来一局</button>
+        <button class="btn btn-ghost" bindtap="onHistoryTap">历史记录</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 历史抽屉 -->
+  <view class="drawer-mask" wx:if="{{drawerVisible}}" bindtap="onCloseDrawer" catchtouchmove="noop"></view>
+  <scroll-view class="drawer" wx:if="{{drawerVisible}}" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="drawer-header">
+      <view class="drawer-title">历史记录</view>
+      <view class="icon-btn" bindtap="onCloseDrawer">✕</view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">历史最佳</view>
+      <view class="best-summary">
+        <view class="result-stat">
+          <text class="result-stat-label">最高分</text>
+          <text class="result-stat-value">{{drawerBestScore}}</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-label">总场次</text>
+          <text class="result-stat-value">{{drawerGames}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="drawer-section">
+      <view class="section-title">最近对局</view>
+      <view class="record-list" wx:if="{{records.length > 0}}">
+        <view class="record-item" wx:for="{{records}}" wx:key="key">
+          <text class="rec-score">{{item.scoreText}}</text>
+          <text class="rec-meta">{{item.metaText}}</text>
+        </view>
+      </view>
+      <view class="record-empty" wx:else>暂无对局记录,快飞第一局吧!</view>
+      <button class="btn-danger-ghost" bindtap="onClearTap">清空全部记录</button>
+    </view>
+  </scroll-view>
+</view>

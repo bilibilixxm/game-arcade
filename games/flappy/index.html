@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="像素小鸟 — Flappy Bird 复刻:点按扇翅,穿过管道,收集奖牌">
+  <title>像素小鸟</title>
+  <!-- PWA(清单与图标在仓库根目录) -->
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" type="image/png" href="../../icons/icon-192.png">
+  <!-- iOS 主屏 Web App -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="像素小鸟">
+  <link rel="apple-touch-icon" href="../../icons/icon-180.png">
+  <link rel="stylesheet" href="flappy.css">
+  <script src="engine.js" defer></script>
+  <script src="sprites.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- 顶部栏 -->
+    <header class="topbar">
+      <h1 class="title">像素小鸟</h1>
+      <div class="topbar-actions">
+        <button id="btn-theme" class="icon-btn" title="主题:跟随系统" aria-label="切换主题">🌓</button>
+        <button id="btn-sound" class="icon-btn" title="音效" aria-label="音效开关">🔊</button>
+        <button id="btn-history" class="icon-btn" title="历史记录" aria-label="历史记录">📊</button>
+      </div>
+    </header>
+
+    <!-- 状态栏 -->
+    <section class="status-bar">
+      <div class="stat">
+        <span class="stat-label">最高分</span>
+        <span class="stat-value" id="stat-best">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">上次得分</span>
+        <span class="stat-value" id="stat-last">--</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">总场次</span>
+        <span class="stat-value" id="stat-games">0</span>
+      </div>
+    </section>
+
+    <!-- 游戏舞台(竖屏画布) -->
+    <main class="stage">
+      <div class="board-wrap">
+        <canvas id="board" aria-label="像素小鸟"></canvas>
+        <!-- 点击起飞提示(ready 态显示) -->
+        <div class="tap-hint" id="tap-hint" hidden>
+          <span class="tap-hand">👆</span>
+          <span>点击 / 空格 扇翅起飞</span>
+        </div>
+        <!-- 开始遮罩 -->
+        <div class="start-overlay" id="start-overlay">
+          <div class="start-card">
+            <p class="start-title">点按扇翅 · 穿过管道缝隙</p>
+            <p class="start-hint">每过一根管道 +1 分<br>10 / 20 / 30 / 40 分解锁 铜 · 银 · 金 · 白金 奖牌<br>撞上管道或落地即结束</p>
+            <button class="btn btn-primary" id="btn-start">开始游戏</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="foot-tip">空格 / ↑ / 点击画面 扇翅 · 翅膀不能停 ✌️</footer>
+  </div>
+
+  <!-- 结果浮层 -->
+  <div class="modal" id="result-modal" hidden>
+    <div class="modal-card">
+      <p class="result-emoji" id="result-emoji">🐦</p>
+      <h2 class="result-title" id="result-title">游戏结束</h2>
+      <p class="result-medal" id="result-medal" hidden><span id="medal-icon">🥉</span><span id="medal-name">铜牌</span></p>
+      <p class="result-record" id="result-record" hidden>🏆 新纪录!</p>
+      <div class="result-stats">
+        <div class="result-stat">
+          <span class="result-stat-label">本次得分</span>
+          <span class="result-stat-value" id="result-score">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">历史最佳</span>
+          <span class="result-stat-value" id="result-best">0</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-retry">再来一局</button>
+        <button class="btn btn-ghost" id="btn-history2">历史记录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史记录抽屉 -->
+  <div class="drawer-mask" id="drawer-mask" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="历史记录">
+    <header class="drawer-header">
+      <h2>历史记录</h2>
+      <button class="icon-btn" id="btn-close-drawer" aria-label="关闭">✕</button>
+    </header>
+
+    <section class="drawer-section">
+      <h3>历史最佳</h3>
+      <div class="best-summary">
+        <div class="result-stat">
+          <span class="result-stat-label">最高分</span>
+          <span class="result-stat-value" id="drawer-best-score">--</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-stat-label">总场次</span>
+          <span class="result-stat-value" id="drawer-games">0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="drawer-section">
+      <h3>最近对局</h3>
+      <ul class="record-list" id="record-list"></ul>
+      <button class="btn btn-danger-ghost" id="btn-clear">清空全部记录</button>
+    </section>
+  </aside>
+</body>
+</html>

@@ -3,7 +3,8 @@
     "pages/home/home",
     "pages/schulte/schulte",
     "pages/tetris/tetris",
-    "pages/battle-city/battle-city"
+    "pages/battle-city/battle-city",
+    "pages/flappy/flappy"
   ],
   "window": {
     "navigationBarTitleText": "游戏合集",

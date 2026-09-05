@@ -51,6 +51,15 @@
         <div class="card-best"><span class="best-label">最高分</span><span class="best-value">--</span></div>
       </a>
 
+      <a class="card" href="games/flappy/index.html" data-best-key="flappy" data-best-type="score">
+        <div class="card-icon">🐤</div>
+        <div class="card-body">
+          <h2>像素小鸟</h2>
+          <p>Flappy 复刻:点按扇翅,穿越管道,冲击奖牌</p>
+        </div>
+        <div class="card-best"><span class="best-label">最高分</span><span class="best-value">--</span></div>
+      </a>
+
       <div class="card card-more">
         <div class="card-icon">✨</div>
         <div class="card-body">
@@ -86,6 +95,9 @@
         } else if (key === 'battle-city') {
           var bcBest = getJSON('battle-city.best', null);
           if (bcBest) el.textContent = String(bcBest.score).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        } else if (key === 'flappy') {
+          var flBest = getJSON('flappy.best', null);
+          if (flBest) el.textContent = String(flBest.score);
         }
       });
     })();

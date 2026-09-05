@@ -5,7 +5,7 @@
    ========================================================== */
 'use strict';
 
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const PRECACHE = [
   './',
   './index.html',
@@ -30,6 +30,12 @@ const PRECACHE = [
   './games/battle-city/levels.js',
   './games/battle-city/sprites.js',
   './games/battle-city/app.js',
+  './games/flappy/',
+  './games/flappy/index.html',
+  './games/flappy/flappy.css',
+  './games/flappy/engine.js',
+  './games/flappy/sprites.js',
+  './games/flappy/app.js',
 ];
 
 self.addEventListener('install', (event) => {

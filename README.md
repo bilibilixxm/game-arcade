@@ -1,6 +1,6 @@
 # Game Arcade · 游戏合集
 
-纯前端小游戏合集,零依赖、零构建。包含:**舒尔特方块**(注意力训练)、**俄罗斯方块**(现代标准版)、**坦克大战**(红白机经典复刻)。打开根目录 `index.html` 进入游戏大厅,同时提供**微信小程序版**(`miniprogram/`)。
+纯前端小游戏合集,零依赖、零构建。包含:**舒尔特方块**(注意力训练)、**俄罗斯方块**(现代标准版)、**坦克大战**(红白机经典复刻)、**像素小鸟**(Flappy Bird 复刻)。打开根目录 `index.html` 进入游戏大厅,同时提供**微信小程序版**(`miniprogram/`)。
 
 **网页在线使用**:https://bilibilixxm.github.io/game-arcade/
 
@@ -51,15 +51,25 @@
 - 手机显示**摇杆**(按住拖动转向,不抬手即可顺滑换向)+ FIRE 触控键;小程序版为单人(1P)
 - 右上角 📊 查看最近 50 局与历史最高分
 
+### 像素小鸟(`games/flappy/`)
+
+Flappy Bird 像素风复刻,忠实原版固定难度:
+
+- 点按**扇翅**向上飞,松手下坠;穿过管道缝隙 +1 分,撞上管道或落地即结束
+- **奖牌**:10 / 20 / 30 / 40 分解锁 铜 · 银 · 金 · 白金
+- 每局随机**白天/黑夜**背景与**三色小鸟**(黄/红/蓝)
+- 键盘:`空格` / `↑` 扇翅;手机直接点按画面
+- 右上角 📊 查看最近 50 局与历史最高分
+
 所有游戏均支持**浅色/深色/跟随系统**三种主题(右上角 🌓 切换,合集内记忆)。
 
 ## 技术说明
 
-- 网页版:每个游戏独立三/四文件(`index.html + *.css + *.js`),游戏逻辑抽为 UMD 引擎(`games/tetris/engine.js`、`games/battle-city/{engine,levels,sprites}.js`,不碰 DOM)
-- PWA:`manifest.json + sw.js` 提供;**改网页代码后需将 `sw.js` 中 `CACHE_VERSION` 升一位**(如 v7 → v8),客户端才能更新缓存
+- 网页版:每个游戏独立三/四文件(`index.html + *.css + *.js`),游戏逻辑抽为 UMD 引擎(`games/tetris/engine.js`、`games/battle-city/{engine,levels,sprites}.js`、`games/flappy/{engine,sprites}.js`,不碰 DOM)
+- PWA:`manifest.json + sw.js` 提供;**改网页代码后需将 `sw.js` 中 `CACHE_VERSION` 升一位**(如 v8 → v9),客户端才能更新缓存
 - 小程序版:`miniprogram/` 目录,`pages/home` 为大厅;引擎文件 `require('libs/*.js')` 复用同一算法(**这些文件是 Web 侧的拷贝,改动后需同步**)
-- 引擎单测:`node tools/tetris-engine.test.js`(39 项:7-bag 分布、SRS 踢墙、计分、Hold、锁定延迟、游戏结束判定);`node tools/battle-city-engine.test.js`(65 项:移动吸附、地形碰撞、破坏粒度(含一击整块模式)、刷新节奏、6 道具、计分、AI 确定性)
-- 资产均由 `tools/` 下脚本纯 Node 生成(零依赖):`node tools/gen-icons.js`、`node tools/gen-sounds.js`(音效含 schulte/tetris/battle-city 三组)
+- 引擎单测:`node tools/tetris-engine.test.js`(39 项:7-bag 分布、SRS 踢墙、计分、Hold、锁定延迟、游戏结束判定);`node tools/battle-city-engine.test.js`(65 项:移动吸附、地形碰撞、破坏粒度(含一击整块模式)、刷新节奏、6 道具、计分、AI 确定性);`node tools/flappy-engine.test.js`(43 项:dt 钳制、重力/终端速度、管道生成间距、rng 确定性、过管计分恰好一次、撞管 dying/触地 over、可玩性冒烟)
+- 资产均由 `tools/` 下脚本纯 Node 生成(零依赖):`node tools/gen-icons.js`、`node tools/gen-sounds.js`(音效含 schulte/tetris/battle-city/flappy 四组)
 
 ## 微信小程序版使用
 
@@ -95,14 +105,18 @@ miniprogram/
 │   ├── tetris-engine.js
 │   ├── battle-city-engine.js
 │   ├── battle-city-levels.js
-│   └── battle-city-sprites.js
+│   ├── battle-city-sprites.js
+│   ├── flappy-engine.js
+│   └── flappy-sprites.js
 ├── assets/sounds/
 │   ├── schulte/*.wav          # 音效(tools/gen-sounds.js 生成)
 │   ├── tetris/*.wav
-│   └── battle-city/*.wav
+│   ├── battle-city/*.wav
+│   └── flappy/*.wav
 └── pages/
     ├── home/                  # 游戏大厅(入口页)
     ├── schulte/               # 舒尔特方块
     ├── tetris/                # 俄罗斯方块
-    └── battle-city/           # 坦克大战
+    ├── battle-city/           # 坦克大战
+    └── flappy/                # 像素小鸟
 ```

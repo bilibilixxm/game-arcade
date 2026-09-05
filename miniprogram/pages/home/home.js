@@ -8,6 +8,7 @@ const KEY_APP_SETTINGS = 'arcade.settings'; // 应用级设置(theme,合集共�
 const KEY_SCHULTE_BEST = 'schulte.best'; // { size: { time, date } }
 const KEY_TETRIS_BEST = 'tetris.best'; // { score, lines, level, date }
 const KEY_BATTLE_CITY_BEST = 'battle-city.best'; // { score, level, date }
+const KEY_FLAPPY_BEST = 'flappy.best'; // { score, date }
 
 const THEME_ICONS = { auto: '🌓', light: '☀️', dark: '🌙' };
 const THEMES = ['auto', 'light', 'dark'];
@@ -59,6 +60,15 @@ Page({
         icon: '🛡️',
         name: '坦克大战',
         desc: '红白机经典复刻:保卫基地、35 关、道具火力',
+        bestLabel: '最高分',
+        bestText: '--',
+        comingSoon: false,
+      },
+      {
+        id: 'flappy',
+        icon: '🐤',
+        name: '像素小鸟',
+        desc: 'Flappy 复刻:点按扇翅,穿越管道,冲击奖牌',
         bestLabel: '最高分',
         bestText: '--',
         comingSoon: false,
@@ -128,10 +138,16 @@ Page({
     const cBest = storageGet(KEY_BATTLE_CITY_BEST, null);
     if (cBest && cBest.score) cityText = fmtScore(cBest.score);
 
+    // 像素小鸟:最高分
+    let flappyText = '--';
+    const fBest = storageGet(KEY_FLAPPY_BEST, null);
+    if (fBest && fBest.score) flappyText = String(fBest.score);
+
     this.setData({
       'games[0].bestText': schulteText,
       'games[1].bestText': tetrisText,
       'games[2].bestText': cityText,
+      'games[3].bestText': flappyText,
     });
   },
 
@@ -148,6 +164,10 @@ Page({
     }
     if (id === 'battle-city') {
       wx.navigateTo({ url: '/pages/battle-city/battle-city' });
+      return;
+    }
+    if (id === 'flappy') {
+      wx.navigateTo({ url: '/pages/flappy/flappy' });
       return;
     }
     wx.showToast({ title: '即将上线,敬请期待', icon: 'none' });

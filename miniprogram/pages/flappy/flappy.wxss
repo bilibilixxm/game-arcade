@@ -1,0 +1,437 @@
+/* ============ 主题变量(与 schulte/tetris 页一致) ============ */
+.page {
+  /* 浅色 */
+  --bg: #f3f5f9;
+  --bg-card: #ffffff;
+  --bg-inset: #e9edf4;
+  --text: #1c2333;
+  --text-sub: #6b7487;
+  --border: #dde3ee;
+  --primary: #4f6ef7;
+  --primary-weak: #e4e9fe;
+  --danger: #e5484d;
+  --danger-weak: #fde8e9;
+  --overlay: rgba(243, 245, 249, 0.6);
+  --shadow: 0 8rpx 32rpx rgba(28, 35, 51, 0.08);
+  --radius: 28rpx;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  padding: 20rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.page.dark {
+  --bg: #12151d;
+  --bg-card: #1b2030;
+  --bg-inset: #232a3d;
+  --text: #e8ebf4;
+  --text-sub: #8f98ad;
+  --border: #2c344a;
+  --primary: #6d87ff;
+  --primary-weak: #26304f;
+  --danger: #ff6369;
+  --danger-weak: #3d2023;
+  --overlay: rgba(18, 21, 29, 0.6);
+  --shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.4);
+}
+
+/* ============ 顶部操作栏 ============ */
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.icon-btn {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2rpx solid var(--border);
+  font-size: 34rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* ============ 状态栏 ============ */
+.status-bar {
+  display: flex;
+  background: var(--bg-card);
+  border: 2rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 16rpx 12rpx;
+  box-shadow: var(--shadow);
+  margin-bottom: 20rpx;
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--text-sub);
+}
+
+.stat-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ============ 游戏舞台:竖屏画布居中(288:512 = 9:16) ============ */
+.stage {
+  display: flex;
+  justify-content: center;
+}
+
+.board-wrap {
+  position: relative;
+  width: 500rpx;
+  height: 890rpx;
+  max-width: 100%;
+}
+
+.board {
+  width: 100%;
+  height: 100%;
+  background: #4ec0ca;
+  border: 2rpx solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+}
+
+/* 点击起飞提示(ready 态) */
+.tap-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2rpx 0 rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  animation: bob 1.1s ease-in-out infinite;
+}
+
+.tap-hand {
+  font-size: 56rpx;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14rpx); }
+}
+
+/* ============ 开始遮罩 ============ */
+.start-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 20, 28, 0.42);
+  border-radius: var(--radius);
+  z-index: 5;
+}
+
+.start-card {
+  background: var(--bg-card);
+  border: 2rpx solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  width: 400rpx;
+}
+
+.start-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.start-hint {
+  font-size: 22rpx;
+  color: var(--text-sub);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ============ 按钮 ============ */
+.btn {
+  margin: 0;
+  padding: 18rpx 40rpx;
+  border-radius: 22rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  border: none;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: var(--bg-inset);
+  color: var(--text);
+}
+
+.btn-danger-ghost {
+  margin: 24rpx auto 0;
+  padding: 16rpx 32rpx;
+  border-radius: 20rpx;
+  background: none;
+  color: var(--danger);
+  border: 2rpx solid var(--danger-weak);
+  font-size: 26rpx;
+  line-height: 1.4;
+}
+
+.btn-danger-ghost::after {
+  border: none;
+}
+
+/* ============ 底部提示 ============ */
+.foot-tip {
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-sub);
+  margin-top: 24rpx;
+}
+
+/* ============ 结果浮层 ============ */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 24, 0.45);
+  z-index: 20;
+  animation: fadein 0.2s;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border-radius: 36rpx;
+  padding: 48rpx 52rpx;
+  width: 560rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  animation: popin 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popin {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result-emoji {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+.result-title {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.result-medal {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.medal-icon {
+  font-size: 44rpx;
+}
+
+.result-record {
+  color: #2fa96e;
+  font-weight: 700;
+  font-size: 28rpx;
+}
+
+.page.dark .result-record {
+  color: #3ecf8e;
+}
+
+.result-stats {
+  display: flex;
+  width: 100%;
+  background: var(--bg-inset);
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
+}
+
+.result-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.result-stat-label {
+  font-size: 22rpx;
+  color: var(--text-sub);
+}
+
+.result-stat-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+/* ============ 历史抽屉 ============ */
+.drawer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 14, 24, 0.4);
+  z-index: 30;
+  animation: fadein 0.2s;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 660rpx;
+  background: var(--bg-card);
+  z-index: 31;
+  box-sizing: border-box;
+  padding: 36rpx;
+  animation: slidein 0.25s cubic-bezier(0.25, 1, 0.4, 1);
+  box-shadow: -16rpx 0 48rpx rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slidein {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.drawer-title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.drawer-section {
+  margin-bottom: 36rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: var(--text-sub);
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.best-summary {
+  background: var(--bg-inset);
+  border-radius: 24rpx;
+  padding: 28rpx 16rpx;
+  display: flex;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 18rpx 24rpx;
+  background: var(--bg-inset);
+  border-radius: 20rpx;
+}
+
+.rec-score {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.rec-meta {
+  font-size: 22rpx;
+  color: var(--text-sub);
+  text-align: right;
+  min-width: 0;
+}
+
+.record-empty {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 26rpx;
+  padding: 48rpx 0;
+}

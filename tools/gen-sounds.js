@@ -213,6 +213,25 @@ const GROUPS = {
       0.8
     ),
   },
+  // 像素小鸟(与 Web 版 Web Audio 合成参数对应)
+  flappy: {
+    // 扇翅:三角波 340→620 短促上滑
+    'wing.wav': mix([{ freq: 340, freqEnd: 620, t0: 0, dur: 0.08, wave: triangle, gain: 0.42 }], 0.12),
+    // 过管:920 + 1380 双音
+    'point.wav': mix(
+      [
+        { freq: 920, t0: 0, dur: 0.06, wave: sawtooth, gain: 0.28 },
+        { freq: 1380, t0: 0.06, dur: 0.1, wave: sawtooth, gain: 0.28 },
+      ],
+      0.2
+    ),
+    // 撞击:锯齿 180→55 下滑
+    'hit.wav': mix([{ freq: 180, freqEnd: 55, t0: 0, dur: 0.14, wave: sawtooth, gain: 0.45 }], 0.18),
+    // 坠落:三角波 620→130 长下滑
+    'die.wav': mix([{ freq: 620, freqEnd: 130, t0: 0, dur: 0.4, wave: triangle, gain: 0.4 }], 0.45),
+    // 浮层弹出:240→480 扫音
+    'swoosh.wav': mix([{ freq: 240, freqEnd: 480, t0: 0, dur: 0.18, wave: triangle, gain: 0.3 }], 0.22),
+  },
 };
 
 /* ---------- 输出 ---------- */
