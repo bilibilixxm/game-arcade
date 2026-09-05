@@ -186,6 +186,53 @@
   line-height: 1.5;
 }
 
+/* 起始难度选择 */
+.level-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.level-label {
+  font-size: 24rpx;
+  color: var(--text-sub);
+}
+
+.level-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 18rpx;
+  border: 2rpx solid var(--border);
+  background: var(--bg-inset);
+  color: var(--text);
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.level-btn-hover {
+  transform: scale(0.9);
+  opacity: 0.85;
+}
+
+.level-num {
+  min-width: 52rpx;
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+}
+
+.start-hint {
+  font-size: 22rpx;
+  color: var(--text-sub);
+  text-align: center;
+}
+
 /* ============ 按钮 ============ */
 .btn {
   margin: 0;

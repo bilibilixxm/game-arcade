@@ -68,6 +68,7 @@
 
     let s; // 对外状态(经 state getter 暴露)
     let bag = [];
+    let startLevel = 1; // 起始难度(reset({level}) 设置;升级不会低于它)
     let lastDrop = -1; // 上次重力下落的时间戳(-1 表示待初始化)
     let grounded = false;
     let lockTimer = null;
@@ -114,7 +115,8 @@
     }
 
     /* ---------- 生命周期 ---------- */
-    function reset() {
+    function reset(opts) {
+      startLevel = Math.min(10, Math.max(1, (opts && opts.level) || 1));
       s = {
         board: emptyBoard(),
         current: null,
@@ -123,7 +125,7 @@
         next: [], // 预览队列(维持 ≥5)
         score: 0,
         lines: 0,
-        level: 1,
+        level: startLevel,
         over: false,
         paused: false,
       };
@@ -261,7 +263,7 @@
       if (cleared) {
         s.score += LINE_SCORES[cleared] * s.level;
         s.lines += cleared;
-        s.level = Math.floor(s.lines / 10) + 1;
+        s.level = Math.max(startLevel, Math.floor(s.lines / 10) + 1);
       }
       grounded = false;
       lockTimer = null;

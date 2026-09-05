@@ -43,7 +43,7 @@ function saveJSON(key, value) {
 
 let records = loadJSON(KEY_RECORDS, []); // [{ score, lines, level, duration, date }]
 let best = loadJSON(KEY_BEST, null); // { score, lines, level, date }
-let settings = Object.assign({ sound: true, theme: 'auto' }, loadJSON(KEY_SETTINGS, {}));
+let settings = Object.assign({ sound: true, theme: 'auto', startLevel: 1 }, loadJSON(KEY_SETTINGS, {}));
 
 /* ---------- 引擎与状态 ---------- */
 const engine = TetrisEngine.createTetris({ rows: 20, cols: 10 });
@@ -225,26 +225,22 @@ function draw() {
     }
   }
 
-  // 幽灵投影与当前方块
+  // 幽灵投影与当前方块(pieceCells 返回绝对坐标,幽灵再加相对偏移 gy-current.y)
   if (s.current && !s.over && phase !== 'idle') {
     const gy = engine.ghostY();
+    const cells = engine.pieceCells();
     if (gy !== s.current.y) {
-      for (const [cx, cy] of SHAPES_OF(s.current)) {
+      for (const [cx, cy] of cells) {
         drawCell(bctx, cx * cell, (gy + cy - s.current.y) * cell, cell, COLORS[s.current.type], 0.16);
       }
     }
-    for (const [cx, cy] of SHAPES_OF(s.current)) {
-      if (cy + s.current.y >= 0) drawCell(bctx, cx * cell, (cy + s.current.y) * cell, cell, COLORS[s.current.type]);
+    for (const [cx, cy] of cells) {
+      if (cy >= 0) drawCell(bctx, cx * cell, cy * cell, cell, COLORS[s.current.type]);
     }
   }
 
   drawPreviews();
   updateHUD();
-}
-
-/* 当前块格子(绝对坐标) */
-function SHAPES_OF(cur) {
-  return engine.pieceCells();
 }
 
 function drawPreview(canvas, type) {
@@ -368,7 +364,7 @@ function loop(now) {
 
 /* ---------- 游戏流程 ---------- */
 function startGame() {
-  engine.reset();
+  engine.reset({ level: settings.startLevel });
   beginWatch();
   phase = 'running';
   startTs = performance.now();
@@ -575,6 +571,20 @@ bindHold('tc-drop', () => act('hard'));
 bindHold('tc-hold', () => act('hold'));
 
 /* ---------- 事件:顶栏与浮层 ---------- */
+/* 起始难度(1~10):决定初始下落速度与计分倍率,升级不会低于它 */
+function applyLevelUI() {
+  $('lv-num').textContent = settings.startLevel;
+}
+
+function changeLevel(d) {
+  settings.startLevel = Math.min(10, Math.max(1, settings.startLevel + d));
+  saveJSON(KEY_SETTINGS, settings);
+  applyLevelUI();
+}
+
+$('lv-down').addEventListener('click', () => changeLevel(-1));
+$('lv-up').addEventListener('click', () => changeLevel(1));
+
 $('btn-start').addEventListener('click', startGame);
 $('btn-retry').addEventListener('click', startGame);
 $('btn-resume').addEventListener('click', togglePause);
@@ -614,6 +624,7 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- 初始化 ---------- */
 applyTheme();
 applySoundIcon();
+applyLevelUI();
 beginWatch();
 resize();
 window.addEventListener('resize', resize);

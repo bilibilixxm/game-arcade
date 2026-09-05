@@ -73,6 +73,7 @@ Page({
     overlayVisible: true,
     pauseVisible: false,
     pressed: { left: false, down: false, right: false },
+    startLevel: 1,
     darkClass: '',
     themeIcon: '🌓',
     pauseIcon: '⏸',
@@ -110,7 +111,8 @@ Page({
     this.applyTheme();
 
     // 本游戏设置与成绩
-    this.settings = Object.assign({ sound: true }, storageGet(KEY_SETTINGS, {}));
+    this.settings = Object.assign({ sound: true, startLevel: 1 }, storageGet(KEY_SETTINGS, {}));
+    this.setData({ startLevel: this.settings.startLevel });
     this.records = storageGet(KEY_RECORDS, []);
     this.best = storageGet(KEY_BEST, null);
 
@@ -343,18 +345,18 @@ Page({
       }
     }
 
-    // 幽灵投影与当前方块
+    // 幽灵投影与当前方块(pieceCells 返回绝对坐标,幽灵再加相对偏移 gy-current.y)
     if (s.current && !s.over && this.phase !== 'idle') {
       const gy = this.engine.ghostY();
       const cells = this.engine.pieceCells();
       if (gy !== s.current.y) {
         for (const [cx, cy] of cells) {
-          this.drawCell(ctx, cx * cell, (gy - (s.current.y - cy)) * cell, cell, COLORS[s.current.type], 0.16);
+          this.drawCell(ctx, cx * cell, (gy + cy - s.current.y) * cell, cell, COLORS[s.current.type], 0.16);
         }
       }
       for (const [cx, cy] of cells) {
-        if (cy + s.current.y >= 0) {
-          this.drawCell(ctx, cx * cell, (cy + s.current.y) * cell, cell, COLORS[s.current.type]);
+        if (cy >= 0) {
+          this.drawCell(ctx, cx * cell, cy * cell, cell, COLORS[s.current.type]);
         }
       }
     }
@@ -411,9 +413,24 @@ Page({
     });
   },
 
+  /* ---------- 起始难度(1~10):决定初始下落速度与计分倍率 ---------- */
+  onLvDown() {
+    this.changeLevel(-1);
+  },
+
+  onLvUp() {
+    this.changeLevel(1);
+  },
+
+  changeLevel(d) {
+    this.settings.startLevel = Math.min(10, Math.max(1, this.settings.startLevel + d));
+    storageSet(KEY_SETTINGS, this.settings);
+    this.setData({ startLevel: this.settings.startLevel });
+  },
+
   /* ---------- 游戏流程 ---------- */
   startGame() {
-    this.engine.reset();
+    this.engine.reset({ level: this.settings.startLevel });
     this.beginWatch();
     this.phase = 'running';
     this.startTs = Date.now();

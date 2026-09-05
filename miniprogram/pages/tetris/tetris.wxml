@@ -40,6 +40,13 @@
       <view class="start-overlay" wx:if="{{overlayVisible}}">
         <view class="start-card">
           <view class="start-title">消行升级 · 一次 4 行得分最高</view>
+          <view class="level-pick">
+            <text class="level-label">起始难度</text>
+            <view class="level-btn" bindtap="onLvDown" hover-class="level-btn-hover">−</view>
+            <text class="level-num">{{startLevel}}</text>
+            <view class="level-btn" bindtap="onLvUp" hover-class="level-btn-hover">＋</view>
+          </view>
+          <view class="start-hint">堆到顶部即结束并记录成绩</view>
           <button class="btn btn-primary" bindtap="onStartTap">开始游戏</button>
         </view>
       </view>

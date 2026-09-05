@@ -197,5 +197,34 @@ function fresh() {
   check('reset 恢复初始状态', s.score === 0 && s.lines === 0 && s.level === 1 && !s.over && s.hold === null && s.next.length === 5 && s.board.every((r) => r.every((c) => c === null)));
 }
 
+/* ---------- 13. 起始难度(reset({level})) ---------- */
+{
+  const e = fresh();
+  e.reset({ level: 5 });
+  check('起始等级生效', e.state.level === 5);
+
+  // 竖 I(rot=1)相对格 [[2,0]..[2,3]],x=3 时占第 5 列;预填末行留空该列,锁入即消 1 行
+  const clearLines = (n) => {
+    for (let i = 0; i < n; i++) {
+      const row = e.state.board[19];
+      for (let x = 0; x < 10; x++) if (x !== 5) row[x] = 'I';
+      e.state.current = { type: 'I', x: 3, y: 16, rot: 1 };
+      e.lockPiece();
+    }
+  };
+
+  clearLines(1); // floor(1/10)+1 = 2 < 5,等级不降
+  check('消行后等级不低于起始难度', e.state.level === 5 && e.state.lines === 1);
+  clearLines(9); // 累计 10:floor(10/10)+1 = 2,仍 < 5
+  check('累计 10 行仍保持起始难度', e.state.lines === 10 && e.state.level === 5);
+  clearLines(50); // 累计 60:floor(60/10)+1 = 7 > 5 → 升到 7
+  check('消行追平后正常升级', e.state.lines === 60 && e.state.level === 7);
+
+  e.reset({ level: 99 });
+  check('起始等级钳制到 1~10', e.state.level === 10);
+  e.reset({ level: 0 });
+  check('起始等级 0 回退为 1', e.state.level === 1);
+}
+
 console.log(`\n========== ${pass}/${pass + fail} 项通过 ==========`);
 process.exit(fail ? 1 : 0);

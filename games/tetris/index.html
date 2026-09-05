@@ -65,7 +65,13 @@
         <div class="start-overlay" id="start-overlay">
           <div class="start-card">
             <p class="start-title">消行升级 · <b>一次 4 行</b> 得分最高</p>
-            <p class="start-hint">支持键盘与触屏按钮</p>
+            <div class="level-pick" role="group" aria-label="起始难度">
+              <span class="level-label">起始难度</span>
+              <button class="level-btn" id="lv-down" aria-label="降低难度">−</button>
+              <b class="level-num" id="lv-num">1</b>
+              <button class="level-btn" id="lv-up" aria-label="提高难度">＋</button>
+            </div>
+            <p class="start-hint">堆到顶部即结束并记录成绩</p>
             <button class="btn btn-primary" id="btn-start">开始游戏</button>
           </div>
         </div>

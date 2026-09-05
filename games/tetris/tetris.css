@@ -257,6 +257,46 @@ button {
   color: var(--text-sub);
 }
 
+/* 起始难度选择 */
+.level-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.level-label {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.level-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.level-btn:active {
+  transform: scale(0.9);
+}
+
+.level-num {
+  min-width: 28px;
+  font-size: 20px;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ============ 按钮 ============ */
 .btn {
   padding: 10px 22px;
